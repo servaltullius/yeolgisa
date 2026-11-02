@@ -588,6 +588,9 @@ body.exam #hud, body.exam #labels { visibility: hidden; }
   .win:not([hidden]), .fb, .seal .ink, .pips i.pm::after, .sc .hr.pm, #help { animation: none; }
   .choice:active:not(:disabled) { transform: none; }
 }
+/* 단계 힌트 (logic-ui winBattle, 계산 문제): 문제 아래, 보기 위. 연 만큼 번호를 붙여 차례로 */
+.hints { margin: 6px 0 10px; padding: 8px 10px 8px 30px; border: 1px dashed #6a5a3a; border-radius: 3px; background: rgba(40, 32, 18, .45); font-size: 13.5px; line-height: 1.55; color: #e8dcc0; display: grid; gap: 3px; }
+.hints li::marker { color: var(--gold); }
 
 /* 메타 조각: 할 일 목록(#quest), 게시판(오늘의 배정, 과목 상태, 목적지), 정산, 장비·대장간·강화 시련 창, 시작 화면 */
 
@@ -1173,7 +1176,7 @@ function runHotkeys(e) {
 // 저장소 쓰기가 실패하면(용량 초과, 저장소 막힘) 기록은 메모리에 남기고 경고를 한 번 띄운 뒤, 다음 저장 때 밀린 기록까지 한꺼번에 쓴다
 //
 // 기록 한 줄의 모양 (k가 종류)
-//   풀이  { k:'a', rid, t, day, qid, rev, form(다른 판 번호, 0 원래 판), mode('hunt'|'heal'|'trial'), kind('eval'|'fix'|'early'), pick, correct, unsure, ms, ex, exRead, exp, kill, voided, fin }
+//   풀이  { k:'a', rid, t, day, qid, rev, form(다른 판 번호, 0 원래 판), hint?(연 단계 힌트 수), mode('hunt'|'heal'|'trial'), kind('eval'|'fix'|'early'), pick, correct, unsure, ms, ex, exRead, exp, kill, voided, fin }
 //         fin: 그때 보인 마무리 세기('normal'|'medium'|'heavy'|null). 다시 계산할 때 오늘 쓴 heavy 예산을 센다 (WS1.7 전 기록에는 없다)
 //   신고  { k:'r', rid, t, day, qid, rev, mode, voids? }  voids: 답한 뒤 신고했으면 무효로 한 풀이의 rid (단계·HP는 되돌리고 경험치는 남긴다, WS1.6)
 //   신고 취소  { k:'u', rid, t, day, qid, rev }  설정의 신고 목록에서 되돌림. 무효가 된 풀이는 그대로 무효
@@ -1651,19 +1654,28 @@ function ensureDay(defer) {
 }
 // 다른 판 (문제은행/README.md '다른 판'): 단계를 정한 날 수(nj)로 판을 고른다. 원래 판부터 평가한 날마다 다음 판, 끝까지 가면 처음으로.
 // 오늘 이미 단계를 정했으면 오늘 판 그대로라 답한 뒤 해설·교정 몬스터도 같은 판이다. Q 객체의 글·보기·정답·해설을 그 판으로 바꿔 두므로 QMAP을 읽는 곳은 모두 같은 판을 본다.
-// 날이 바뀌어 판이 바뀌는 것은 문제를 열어 둔 화면(사냥·치료소·시련·공성전·정산)이 아닐 때만. 그 사이에는 어제 판을 그대로 둔다
+// 날이 바뀌어 판이 바뀌는 것은 문제를 열어 둔 화면(사냥·치료소·시련·정산)이 아닐 때만. 그 사이에는 어제 판을 그대로 둔다.
+// 공성전은 시작할 때 문항마다 판 번호를 답안지(S.siege.forms)에 적어 두고 끝까지 그 판을 그린다(siegeQ). 다시 열어도, 날이 바뀌어도 답안지와 문제가 어긋나지 않는다
 let formKey = null;
+// 판마다 바뀌는 필드. 판에 없는 필드는 비운다(근거 ref만 원래 판 것을 쓴다: 숫자 틀의 공식은 같다)
+const FORM_KEYS = ['q', 'c', 'a', 'ex', 'steps', 'ref', 'image'];
+function formFields(q, f) {
+  if (!q.base) q.base = Object.fromEntries(FORM_KEYS.map((k) => [k, q[k]]));
+  const src = f && q.alts && q.alts[f - 1];
+  if (!src) return q.base;
+  return Object.fromEntries(FORM_KEYS.map((k) => [k, k in src ? src[k] : k === 'ref' ? q.base.ref : undefined]));
+}
+// force: 열어 둔 화면이어도, 날짜·progVer가 그대로여도 다시 센다 (부팅·기록 다시 읽기·처음부터)
 function varyQ(force) {
   const k = dayKey(today()), key = `${k}|${progVer}`;
-  if (key === formKey) return;
-  if (!force && formKey && !formKey.startsWith(`${k}|`) && (S.run || S.trial || S.siege || S.settle)) return;
+  if (key === formKey && !force) return;
+  if (!force && formKey && !formKey.startsWith(`${k}|`) && (S.run || S.trial || S.settle)) return;
   formKey = key;
   Q.forEach((q) => {
     if (!q.alts) return;
-    if (!q.base) q.base = { q: q.q, c: q.c, a: q.a, ex: q.ex, steps: q.steps };
     const p = S.prog[q.id], n = p ? (p.nj || 0) - (p.jd === k ? 1 : 0) : 0, f = n % (q.alts.length + 1);
     if (f === q.form) return;
-    Object.assign(q, f ? Object.assign({ steps: undefined }, q.alts[f - 1]) : q.base);
+    Object.assign(q, formFields(q, f));
     q.form = f;
   });
 }
@@ -1968,7 +1980,7 @@ function removeMon(key, how) {
 // pre·rid는 마지막 답의 답하기 전 학습 상태와 풀이 기록 id (그 답을 신고하면 되돌린다)
 function newRun(mode, zone, items) {
   return { mode, zone, pending: items, fixq: [], active: null, hp: mode === 'heal' ? null : 5, results: [], exp: 0, scrolls: 0, ms: 0,
-    died: false, qStart: 0, answered: false, unsure: false, picked: null, fb: null, pos: {}, fixAnnounced: false,
+    died: false, qStart: 0, answered: false, unsure: false, hint: 0, picked: null, fb: null, pos: {}, fixAnnounced: false,
     lv0: S.lv, exp0: S.exp, done0: assignCount().done, finale: false, pre: null, rid: null };
 }
 const visibleItems = (r) => (r.pending.length ? r.pending : r.fixq).slice(0, 4);
@@ -2026,7 +2038,7 @@ function engage(key) {
   if (!it) return;
   if (r.mode === 'hunt' && !visibleItems(r).some((x) => mkey(x) === key)) return;
   ensureDay();
-  r.active = it; r.answered = false; r.unsure = false; r.picked = null; r.fb = null; r.pre = null; r.rid = null; r.qStart = CLOCK.now();
+  r.active = it; r.answered = false; r.unsure = false; r.hint = 0; r.picked = null; r.fb = null; r.pre = null; r.rid = null; r.qStart = CLOCK.now();
   if (r.mode === 'hunt') { FIELD.target = key; emit('engage', { key }); }
   renderHud(); renderQuest(); renderWin();
   qopen(it.id, it.kind, r.mode);
@@ -2062,6 +2074,7 @@ function judgeRun(r, k) {
   const p0 = Object.assign({}, p);
   // 풀이 기록 한 줄을 먼저 학습 상태에 적용한다. 판이 시작할 때 'eval'이었어도 그사이 오늘 단계를 정한 문제면 교정으로 친다 (다시 계산할 때와 같은 결과)
   const rec = attemptRec(q, r.mode, heal ? 'fix' : item.kind, k, correct, r.unsure && item.kind === 'eval' && !heal, timeMs);
+  if (r.hint) rec.hint = r.hint;
   const st = stepProg(S.prog, rec, rec.day) || { kind: 'fix', from: p.stage, to: p.stage, sch: null };
   const it = heal || st.kind === item.kind ? item : { id: item.id, kind: st.kind };
   const unsure = rec.unsure && it.kind === 'eval';
@@ -2227,9 +2240,34 @@ function toggleUnsure() {
   const t = S.trial;
   const r = t && !t.done ? t : S.run;
   if (!r || r.answered || (r === S.run && !r.active)) return;
+  // 힌트를 연 평가 풀이는 애매함을 끌 수 없다 (useHint)
+  if (r === S.run && r.hint && r.unsure) return;
   r.unsure = !r.unsure;
   const b = $('#unsure');
   if (b) { b.setAttribute('aria-pressed', String(r.unsure)); b.innerHTML = `${r.unsure ? '애매함 표시됨' : '애매함'}<span class="kbd">Q</span>`; }
+}
+// 단계 힌트 (계산 문제): 공식(ref)부터, 다음은 풀이 단계. 정답 값이 처음 나오는 단계부터는 뺀다(늘 마지막 단계는 빼고, 답한 뒤 해설에 다 나온다).
+// 정답 값: 정답 보기의 첫 수와 0.5 % 안인 수가 단계 글에 있으면 (반올림 자리가 달라도 잡는다. 쉼표·10^n 꼴도 읽는다)
+// 하나라도 열면 평가 풀이는 애매함으로 친다: 맞혀도 더 일찍 다시 나오고, 보상은 확신한 정답과 같다(기획서 4장 애매함). 사냥·치료소에서만, 시련·공성전(시험 흉내)에는 없다
+const numsIn = (s) => (String(s).replace(/(\d),(?=\d{3})/g, '$1').match(/\d+(?:\.\d+)?(?:\s*[×x]\s*10\^\{?-?\d+\}?)?/g) || [])
+  .map((m) => Number(m.replace(/\s*[×x]\s*10\^\{?(-?\d+)\}?/, 'e$1')));
+function hintsOf(q) {
+  if (!q || q.type !== '계산' || !Array.isArray(q.steps)) return [];
+  const ans = numsIn(q.c[q.a])[0];
+  const leak = (s) => Number.isFinite(ans) && ans !== 0 && numsIn(s).some((v) => Math.abs(v - ans) <= 0.005 * Math.abs(ans));
+  let end = q.steps.length - 1;
+  const i = q.steps.findIndex(leak);
+  if (i >= 0 && i < end) end = i;
+  return [q.ref ? `공식: ${q.ref}` : null, ...q.steps.slice(0, end)].filter(Boolean);
+}
+function useHint() {
+  const r = S.run;
+  if (!r || !r.active || r.answered || S.screen !== 'battle') return;
+  const L = hintsOf(QMAP[r.active.id]);
+  if ((r.hint || 0) >= L.length) return;
+  r.hint = (r.hint || 0) + 1;
+  if (r.active.kind === 'eval' && r.mode !== 'heal') r.unsure = true;
+  renderWin();
 }
 // 지금 상대를 목록에서 빼고, 판이 끝났으면 정산으로 넘긴다. 계속 싸울 수 있으면 true
 function finishActive() {
@@ -2526,7 +2564,9 @@ function trialQuit() {
 // ---------- 공성전 ----------
 function startSiege() {
   if (!S.siege) {
-    S.siege = { start: CLOCK.now(), ans: {}, flag: {}, cur: 0, done: false, confirm: false, result: null };
+    // forms: 문항마다 지금 판 번호 (끝까지 이 판으로 그리고 채점한다, siegeQ)
+    const forms = Object.fromEntries(Object.values(SMAP).map((id) => [id, QMAP[id].form || 0]));
+    S.siege = { start: CLOCK.now(), ans: {}, flag: {}, cur: 0, done: false, confirm: false, result: null, forms };
     log('[공성전] 정규 공성전을 시작합니다. 80문항 · 120분', 'sys');
   } else if (!S.siege.done) {
     log('[공성전] 이어서 풉니다. 타이머는 시작 시각부터 계속 흘렀습니다.', 'sys');
@@ -2535,7 +2575,13 @@ function startSiege() {
   saveSession();
   render();
 }
-const siegeQ = (n) => { const id = SMAP[n]; return id && !S.prog[id].reported ? QMAP[id] : null; };
+// 공성전 문항: 시작할 때 적어 둔 판(S.siege.forms)으로. 지금 판과 다르면 Q를 바꾸지 않고 그 판의 사본을 준다 (forms가 없는 옛 답안지는 지금 판)
+const siegeQ = (n) => {
+  const id = SMAP[n];
+  if (!id || S.prog[id].reported) return null;
+  const q = QMAP[id], fs = S.siege && S.siege.forms, f = fs && id in fs ? fs[id] : null;
+  return f === null || f === (q.form || 0) || !q.alts || f > q.alts.length ? q : Object.assign({}, q, formFields(q, f), { form: f });
+};
 function siegePick(k) {
   const g = S.siege;
   if (!g || g.done || !siegeQ(g.cur)) return;
@@ -2734,6 +2780,7 @@ onLogic('boot', () => {
 // ---------- 버튼 동작: 규칙을 바로 부르는 것 ----------
 ACTS.ans = (b) => answer(Number(b.dataset.v));
 ACTS.unsure = () => toggleUnsure();
+ACTS.hint = () => useHint();
 ACTS.report = () => report();
 ACTS.next = () => next();
 ACTS.engage = (b) => engage(b.dataset.v);
@@ -2957,12 +3004,14 @@ function winBook() {
     <p class="note">칸 하나가 문제 하나예요. 색이 진할수록 숙련 단계가 높아요. ★은 숫자나 묻는 말이 바뀐 판을 확신하고 맞힌 세세항목이에요.</p>
     <div class="actions">${closeBtn}</div>` };
 }
-ACTS.book = () => { if (S.screen === 'town' && !S.trial) { S.panel = S.panel === 'book' ? null : 'book'; S.npc = null; FIELD.focus = null; renderQuest(); renderWin(); } };
+// 마을 창(장비·도감) 열고 닫기. 버튼과 단축키(I·B)가 같이 쓴다
+function togglePanel(name) { if (S.screen === 'town' && !S.trial) { S.panel = S.panel === name ? null : name; S.npc = null; FIELD.focus = null; renderQuest(); renderWin(); } }
+ACTS.book = () => togglePanel('book');
 ACTS.bookz = (b) => { if (ZONES[b.dataset.v]) { bookZ = b.dataset.v; renderWin(); } };
 // ---------- 버튼 동작: 문제 사이 창 ----------
 ACTS.hunt = (b) => startHunt(b.dataset.v);
 ACTS.enchant = (b) => enchant(b.dataset.v);
-ACTS.gear = () => { if (S.screen === 'town' && !S.trial) { S.panel = S.panel === 'gear' ? null : 'gear'; S.npc = null; FIELD.focus = null; renderQuest(); renderWin(); } };
+ACTS.gear = () => togglePanel('gear');
 ACTS.lookahead = () => { emit('lookahead', {}); log('[장비] +9 외형을 8초 동안 미리 봅니다. 수치는 그대로예요.', 'dim'); };
 ACTS.tans = (b) => trialAnswer(Number(b.dataset.v));
 ACTS.tnext = () => trialNext();
@@ -2973,6 +3022,8 @@ ACTS.soon = (b) => { const [n, ph] = b.dataset.v.split('|'); log(`[안내] ${jos
 ACTS.reset = () => {
   const started = S.started;
   S = fresh(); S.started = started;
+  // 새 S는 진행이 비었으니 판도 처음부터 다시 고른다 (force: progVer가 그대로여도 다시 센다)
+  varyQ(true);
   FIELD.scene = null; chatTab = 'all';
   intro(); render();
 };
@@ -3312,15 +3363,19 @@ function winBattle() {
   // 창 아래 버튼 줄(높이 고정): 답하기 전 [애매함] [신고] [귀환] 기준 시간, 답한 뒤 [신고] [귀환] [다음]. 다음 버튼이 늘 스크롤 없이 보인다 (WS3.4)
   const back = r.died ? '' : `<button class="btn ghost" data-act="retreat">${heal ? '그만두기' : '귀환'}</button>`;
   const fb = fbOld(r.fb, r.mode, r.died), ctx = { act: 'next', remain: r.pending.length + r.fixq.length - 1, foot: true };
+  // 단계 힌트(계산 문제, logic-core useHint): 연 만큼 문제 아래에 차례로. 평가 풀이에서 열면 애매함이 켜지고 끌 수 없다
+  const hints = hintsOf(q), hn = r.hint || 0, hintLock = hn > 0 && item.kind === 'eval' && !heal;
+  const hintBtn = hints.length ? `<button class="btn" id="hintBtn" data-act="hint"${hn >= hints.length ? ' disabled' : ''} title="공식부터 풀이 단계를 하나씩 봐요. 평가 풀이에서 쓰면 애매함으로 쳐서 더 일찍 다시 나와요">힌트 ${hn}/${hints.length}<span class="kbd">E</span></button>` : '';
   const foot = r.answered
     ? `<div class="fl">${rptBtn(r)}${back}</div>${fb ? fbNext(fb, ctx) : ''}`
-    : `<div class="fl">${item.kind === 'eval' && !heal ? `<button class="btn" id="unsure" data-act="unsure" aria-pressed="${r.unsure}" aria-label="애매함">${r.unsure ? '애매함 표시됨' : '애매함'}<span class="kbd">Q</span></button>` : ''}${rptBtn(r)}${back}</div>
+    : `<div class="fl">${item.kind === 'eval' && !heal ? `<button class="btn" id="unsure" data-act="unsure" aria-pressed="${r.unsure}" aria-label="애매함"${hintLock ? ' disabled' : ''}>${hintLock ? '힌트 씀 · 애매함' : r.unsure ? '애매함 표시됨' : '애매함'}<span class="kbd">Q</span></button>` : ''}${hintBtn}${rptBtn(r)}${back}</div>
       <span class="timer" id="timer">${baseText(t.sec, overBase(r, q))}</span>`;
   const name = item.kind === 'fix' && !heal ? `돌아온 ${qName(q)}` : qName(q);
   return { title: esc(name), cls: heal ? '' : kc, sub, foot, body: `
     <div class="qhead"><span class="qt">${ico(t.model, 'ti')}${esc(q.type)}</span><span class="qk${kc ? ` ${kc}` : ''}">${kl}</span>${m > 1 ? `<span class="qw">약점 ×${m}</span>` : ''}${q.form ? '<span class="qv" title="같은 문제를 숫자나 묻는 말을 바꿔 다시 낸 판">변형</span>' : ''}<span class="qn">${n} / ${tot}</span></div>
     <p class="qtext">${tset(q.q)}</p>
     ${qimg(q)}
+    ${hn && !r.answered ? `<ol class="hints">${hints.slice(0, hn).map((h) => `<li>${tset(h)}</li>`).join('')}</ol>` : ''}
     <div class="choices">${choicesHtml(q, r.answered, r.picked, 'ans')}</div>
     ${renderFb(fb, q, ctx)}` };
 }
@@ -3335,8 +3390,8 @@ function renderHelp() {
     <div class="win-b">
       <div class="helpgrid">
         <section><h3>이동과 화면</h3><ul>${row('땅 누르기', '그 자리로 걷기')}${row('마우스 휠', '확대·축소')}${row('M', '소리: 음악 → 효과음만 → 끔')}${row('화질 버튼', '그래픽 품질 바꾸기')}</ul></section>
-        <section><h3>마을</h3><ul>${row('마을 사람 누르기', '말 걸기')}${row('I', '장비 창')}${row('Esc', '창 닫기')}</ul></section>
-        <section><h3>사냥</h3><ul>${row('몬스터, Space', '가까운 몬스터와 전투')}${row('1 ~ 4', '답 고르기')}${row('Q', '애매함 표시 (맞혀도 내일 다시)')}${row('Enter, Space', '다음 몬스터')}</ul></section>
+        <section><h3>마을</h3><ul>${row('마을 사람 누르기', '말 걸기')}${row('I', '장비 창')}${row('B', '세세항목 도감')}${row('Esc', '창 닫기')}</ul></section>
+        <section><h3>사냥</h3><ul>${row('몬스터, Space', '가까운 몬스터와 전투')}${row('1 ~ 4', '답 고르기')}${row('Q', '애매함 표시 (맞혀도 내일 다시)')}${row('E', '계산 힌트: 공식부터 한 단계씩 (쓰면 애매함)')}${row('Enter, Space', '다음 몬스터')}</ul></section>
         <section><h3>공성전</h3><ul>${row('1 ~ 4', '답 고르기')}${row('← →', '문항 이동')}${row('검토 표시', '나중에 다시 볼 문항')}</ul></section>
       </div>
       <h3>규칙 한눈에</h3>
@@ -3699,6 +3754,7 @@ document.addEventListener('keydown', (e) => {
     if (!r.active) { if (e.key === ' ' && !onButton) { e.preventDefault(); engageNearest(); } }
     else if (!r.answered && ['1', '2', '3', '4'].includes(e.key)) { e.preventDefault(); answer(Number(e.key) - 1); }
     else if (!r.answered && (code === 'KeyQ' || e.key === 'q' || e.key === 'Q')) { e.preventDefault(); toggleUnsure(); }
+    else if (!r.answered && (code === 'KeyE' || e.key === 'e' || e.key === 'E')) { e.preventDefault(); useHint(); }
     else if (r.answered && (e.key === 'Enter' || e.key === ' ') && !onButton) { e.preventDefault(); next(); }
   } else if (S.screen === 'siege' && S.siege && !S.siege.done) {
     if (['1', '2', '3', '4'].includes(e.key)) { e.preventDefault(); siegePick(Number(e.key) - 1); }
@@ -3706,8 +3762,8 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === 'ArrowLeft') { e.preventDefault(); siegeGo(-1); }
   } else if (S.screen === 'town') {
     if (e.key === 'Escape') closeWin();
-    else if (code === 'KeyI' || e.key === 'i' || e.key === 'I') { S.panel = S.panel === 'gear' ? null : 'gear'; S.npc = null; FIELD.focus = null; renderQuest(); renderWin(); }
-    else if (code === 'KeyB' || e.key === 'b' || e.key === 'B') ACTS.book();
+    else if (code === 'KeyI' || e.key === 'i' || e.key === 'I') togglePanel('gear');
+    else if (code === 'KeyB' || e.key === 'b' || e.key === 'B') togglePanel('book');
   }
 });
 
