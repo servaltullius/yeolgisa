@@ -1397,7 +1397,8 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // ---------- 설정 S.cfg (기획서 10장 설정 화면, WS1.4) ----------
 // exam 시험일 'YYYY-MM-DD', B 하루 예산, N 신규 상한, crunchNew 막판 구간에도 신규(평가하지 않은 세세항목만), reg 원서접수일 | null.
 // 설정 기록(k:'c')으로 남기고 마지막 기록이 이긴다. '처음부터'로 지워지지 않는다. 바꾸면 기록 전체를 새 설정으로 다시 계산한다(setCfg). 신고 목록은 LOG.reported()
-const CFG0 = { exam: dayKey(EXAM), B: 80, N: 20, crunchNew: false, reg: null };
+// 기본 B 45·N 15: 하루 1시간 남짓 (2026-11-03 사용자 답. 문제당 약 100초 어림으로 시험 전까지 300문제를 다 본다)
+const CFG0 = { exam: dayKey(EXAM), B: 45, N: 15, crunchNew: false, reg: null };
 const isDayKey = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && dayKey(keyDay(v)) === v;
 const CFG_OK = {
   exam: isDayKey,
@@ -5608,7 +5609,11 @@ const SND = (() => {
     lp.type = 'lowpass'; lp.Q.value = 0.5; lp.frequency.value = MST.explore.lp;
     lp.connect(lv); lv.connect(out); out.connect(g.in.music); acc.connect(lp);
     for (const k of STEMS) { const s = c.createGain(); s.connect(lp); stems[k] = s; }
-    return { g, zone, M, bar: 0, next: t, last: t, st: null, out, lv, lp, acc, stems, notes: 0 };
+    // 확인용(DEV): 소리 0인 상수 원천을 층마다 이어 둔다. 음이 다 끝난 층(뜯기·선율은 확률이라 한 마디 넘게 비기도 한다)은 브라우저가 처리를 멈춰
+    // gain.value가 옛 값에 머문다 (실제 소리는 다음 음이 들어올 때 곡선대로 맞다). state()가 읽는 값이 실제 곡선을 따르게 한다
+    let keep = null;
+    if (DEV) { keep = c.createConstantSource(); keep.offset.value = 0; for (const k of STEMS) keep.connect(stems[k]); keep.start(t); }
+    return { g, zone, M, bar: 0, next: t, last: t, st: null, out, lv, lp, acc, stems, keep, notes: 0 };
   }
   const barLen = (M) => (60 / M.bpm) * 4;
   // 값 옮기기: 지수로 다가가다 sec초에 정확히 그 값 (예약이 시간 순서라 실시간과 오프라인 모두 맞다)
@@ -5884,7 +5889,7 @@ const SND = (() => {
   function stopMusic() {
     recStop();
     clearInterval(musTimer);
-    if (P && ctx) { const o = P.out; ramp(o.gain, 0, 0.6); setTimeout(() => o.disconnect(), 2500); }
+    if (P && ctx) { const o = P.out; ramp(o.gain, 0, 0.6); setTimeout(() => o.disconnect(), 2500); if (P.keep) P.keep.stop(ctx.currentTime + 2.5); }
     P = null;
   }
   function music(zone, force) {
@@ -6001,7 +6006,7 @@ const SND = (() => {
     // 녹음 소리 켜고 끄기(확인용 비교)와 불러온 수
     smp: (on) => { if (on !== undefined) smpOn = !!on; return { on: smpOn, n: SB.size }; },
     // 녹음 음악·환경음 켜고 끄기 (확인용: 합성 음악 검사 t-aud-state는 끄고 돈다). 바꾸면 지금 장소를 다시 건다
-    rec: (on) => { if (on !== undefined && !!on !== recOn) { recOn = !!on; if (ambZone && ctx) { const z = ambZone; ambZone = null; ambient(z); } } return { on: recOn, n: RB.size, zone: RP ? RP.zone : null, st: RP ? RP.st : null, lp: RP ? Math.round(RP.lp.frequency.value) : null, g: RP ? +RP.v.gain.value.toFixed(3) : null, amb: ambRec }; },
+    rec: (on) => { if (on !== undefined && !!on !== recOn) { recOn = !!on; if (ambZone && ctx) { const z = ambZone; ambZone = null; stopMusic(); ambient(z); } } return { on: recOn, n: RB.size, zone: RP ? RP.zone : null, st: RP ? RP.st : null, lp: RP ? Math.round(RP.lp.frequency.value) : null, g: RP ? +RP.v.gain.value.toFixed(3) : null, amb: ambRec }; },
   };
 })();
 
