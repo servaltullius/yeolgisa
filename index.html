@@ -3554,7 +3554,7 @@ function toggleHelp() {
   el.innerHTML = `<header class="win-h"><h2 tabindex="-1" autofocus>조작법</h2><button class="x" data-act="help" aria-label="조작법 닫기">×</button></header>
     <div class="win-b">
       <div class="helpgrid">
-        <section><h3>이동과 화면</h3><ul>${row('땅 누르기', '그 자리로 걷기')}${row('마우스 휠', '확대·축소')}${row('M', '소리: 음악 → 효과음만 → 끔')}${row('화질 버튼', '그래픽 품질 바꾸기')}</ul></section>
+        <section><h3>이동과 화면</h3><ul>${row('땅 누르기', '그 자리로 걷기')}${row('W A S D', '누르고 있는 동안 걷기')}${row('마우스 휠', '확대·축소')}${row('M', '소리: 음악 → 효과음만 → 끔')}${row('화질 버튼', '그래픽 품질 바꾸기')}</ul></section>
         <section><h3>마을</h3><ul>${row('마을 사람 누르기', '말 걸기')}${row('I', '장비 창')}${row('B', '세세항목 도감')}${row('Esc', '창 닫기')}</ul></section>
         <section><h3>사냥</h3><ul>${row('몬스터, Space', '가까운 몬스터와 전투')}${row('1 ~ 4', '답 고르기')}${row('Q', '애매함 표시 (맞혀도 내일 다시)')}${row('E', '계산 힌트: 공식부터 한 단계씩 (쓰면 애매함)')}${row('Enter, Space', '다음 몬스터')}</ul></section>
         <section><h3>공성전</h3><ul>${row('1 ~ 4', '답 고르기')}${row('← →', '문항 이동')}${row('검토 표시', '나중에 다시 볼 문항')}</ul></section>
@@ -12288,6 +12288,24 @@ function sync() {
 
 // ---------- 플레이어 ----------
 const PL = { dest: null, pend: null };
+// WASD 걷기: 누르고 있는 동안 화면 기준으로 걷는다(W 위 · S 아래 · A 왼쪽 · D 오른쪽, 대각선은 같은 속도).
+// 땅 누르기와 같은 때에만 걷는다(YV.api.canWalk: 문제·공성전·강화 시련 중에는 안 걷는다). 한글 입력 중에도 되게 e.code로 본다
+const WASD = { KeyW: [0, 1], KeyS: [0, -1], KeyA: [-1, 0], KeyD: [1, 0] }, HELD = new Set();
+function wasdDir() {
+  if (!HELD.size || !YV.api || !YV.api.canWalk() || document.querySelector('dialog[open]')) return null;
+  let x = 0, y = 0;
+  HELD.forEach((k) => { x += WASD[k][0]; y += WASD[k][1]; });
+  const n = Math.hypot(x, y);
+  return n ? [x / n, y / n] : null;
+}
+document.addEventListener('keydown', (e) => {
+  if (!WASD[e.code] || e.ctrlKey || e.metaKey || e.altKey || (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))) return;
+  HELD.add(e.code);
+  // 걷기 시작하면 땅 누르기처럼 열린 마을 사람 대화를 닫고, 찍어 둔 목적지는 버린다
+  if (!e.repeat && wasdDir()) { if (FIELD.focus) YV.api.close(); PL.dest = null; clickRing.visible = false; }
+});
+document.addEventListener('keyup', (e) => HELD.delete(e.code));
+window.addEventListener('blur', () => HELD.clear());
 function pushOut(e) {
   const obs = world ? world.obstacles : [];
   for (let k = 0; k < obs.length; k++) {
@@ -12320,7 +12338,12 @@ function updatePlayer(dt) {
   }
   else if (PL.dest) goal = PL.dest;
   let moving = false, d = 0;
-  if (goal) {
+  const kd = !pendE && !(tgt && !tgt.dying) && !npc ? wasdDir() : null;
+  if (kd) {
+    e.sx += kd[0] * speed * dt; e.sy += kd[1] * speed * dt;
+    moving = true;
+    faceToward(e, kd[0], kd[1]);
+  } else if (goal) {
     const dx = goal[0] - e.sx, dy = goal[1] - e.sy;
     d = Math.hypot(dx, dy);
     if (d > stop + 0.02) {
@@ -12593,7 +12616,7 @@ const entActive = (e) => {
 };
 // 지금 무언가 움직이는 연출이 있는지: 바쁨 표시, 밀린 이벤트, 지연 연출, 타격 멈춤, 카메라, 흔들림, 화면 번쩍임·채도, 읽기 전환, 기사 이동, 번쩍임 빛, 캐릭터 동작
 function activeNow() {
-  if (PACE.hold > 0 || isBusy() || EVQ.length || TIMERS.length || TIME.hitStop > 0 || PACE.camMove || PL.dest || PL.pend) return true;
+  if (PACE.hold > 0 || isBusy() || EVQ.length || TIMERS.length || TIME.hitStop > 0 || PACE.camMove || PL.dest || PL.pend || HELD.size) return true;
   if (cam.shake > 0 || cam.punch > 0 || grade.flash > 0 || Math.abs(grade.sat - grade.satWant) > 0.01 || MOOD.u !== MOOD.want) return true;
   if (GV.u < 1 || grade.shock || grade.chroma > 0) return true;
   for (let i = 0; i < RIG.slots.length; i++) if (RIG.slots[i].pulse) return true;
