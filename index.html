@@ -1053,7 +1053,7 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const EXAM = new Date(2027, 0, 30);        // 기획서 2장 가정
+const EXAM = new Date(2027, 1, 20);        // 기획서 2장 가정 (2026년 CBT 기간 1.30~3.3 안에서 2월 중후반으로 잡음, 공고 뒤 실제 날짜로)
 const INTERVAL = [1, 1, 3, 7, 14, 30, 60]; // 기획서 5장 단계별 간격(일)
 const CIRC = ['①', '②', '③', '④'];
 // 날짜·시간 글자
