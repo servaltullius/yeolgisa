@@ -12476,7 +12476,8 @@ canvas.addEventListener('pointerup', (ev) => {
     else if (e.kind === 'npc') { PL.dest = null; YV.api.talk(e.npc); }
     return;
   }
-  if (hit.ground && YV.api.canWalk()) {
+  // 키로 걷는 중에 찍은 땅은 목적지로 삼지 않는다 (키를 뗀 뒤 옛 자리로 혼자 걸어가지 않게)
+  if (hit.ground && YV.api.canWalk() && !wasdDir()) {
     const [sx, sy] = toS(hit.ground);
     if (FIELD.focus) YV.api.close();
     PL.dest = [sx, sy];
@@ -12616,7 +12617,7 @@ const entActive = (e) => {
 };
 // 지금 무언가 움직이는 연출이 있는지: 바쁨 표시, 밀린 이벤트, 지연 연출, 타격 멈춤, 카메라, 흔들림, 화면 번쩍임·채도, 읽기 전환, 기사 이동, 번쩍임 빛, 캐릭터 동작
 function activeNow() {
-  if (PACE.hold > 0 || isBusy() || EVQ.length || TIMERS.length || TIME.hitStop > 0 || PACE.camMove || PL.dest || PL.pend || HELD.size) return true;
+  if (PACE.hold > 0 || isBusy() || EVQ.length || TIMERS.length || TIME.hitStop > 0 || PACE.camMove || PL.dest || PL.pend || (HELD.size && wasdDir())) return true;
   if (cam.shake > 0 || cam.punch > 0 || grade.flash > 0 || Math.abs(grade.sat - grade.satWant) > 0.01 || MOOD.u !== MOOD.want) return true;
   if (GV.u < 1 || grade.shock || grade.chroma > 0) return true;
   for (let i = 0; i < RIG.slots.length; i++) if (RIG.slots[i].pulse) return true;
