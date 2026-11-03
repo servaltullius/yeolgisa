@@ -3044,12 +3044,12 @@ function winTrial() {
     <button class="btn ghost" data-act="tquit">그만두기</button></div>`;
   // 풀이 결과 블록은 사냥과 같은 renderFb(logic-ui)가 그린다. 다음 버튼은 tnext, 남은 문제 수로 '다음 문제'·'결과 보기'가 갈린다
   // fbOld: 핫 리로드로 넘겨받은 옛 모양 FB(글자로 만든 결과)에 mode를 채워 옛 글자 그대로 그리게 한다
-  const fb = renderFb(fbOld(f, 'trial', false), q, { act: 'tnext', remain: t.items.length - 1 - t.idx, picked: t.picked });
+  const fv = fbOld(f, 'trial', false), fb = renderFb(fv, q, { act: 'tnext', remain: t.items.length - 1 - t.idx, picked: t.picked });
   return { title: `강화 시련 · ${gearName(t.slot, t.from)}`, body: `
     <div class="trialbar">${t.items.map((x, i) => `<i class="${i < t.idx || (i === t.idx && t.answered) ? 'did' : ''}${i === t.idx ? ' cur' : ''}"></i>`).join('')}<span>${t.idx + 1} / 3 · 정답 ${t.correct}</span></div>
     <div class="qhead">${kindTag}<span class="chip">${ZONES[g.z].subject} · ${q.item}</span></div>
     <p class="qtext">${esc(q.q)}</p>
-    ${choicesHtml(q, t, 'tans')}
+    ${choicesHtml(q, t, 'tans', fv)}
     ${ctl}${fb}
     ${t.reused ? '<p class="note">미리보기는 샘플이 적어서 오늘 시련에 나온 문제가 다시 나올 수 있어요.</p>' : ''}` };
 }
@@ -3065,7 +3065,7 @@ function huntReview(rows) {
     const q = QMAP[id], src = imgSrc(q.image);
     return `<details><summary>${reason} · ${esc(q.name)}</summary>
       <p>${tset(q.q)}</p>${src ? `<img src="${esc(src)}" alt="문제 그림">` : ''}
-      <p><b>정답 ${CIRC[q.a]}</b> ${tset(q.c[q.a])}</p>
+      ${rightAnswer(q)}
       ${exBody({}, q)}</details>`;
   }).join('');
   return `<section class="hunt-review"><h3>다시 볼 문제 · ${review.size}개</h3>${cards}</section>`;
@@ -3443,6 +3443,8 @@ function fbNext(f, ctx) {
   return ctx.foot ? `<button class="btn primary" id="nextBtn" data-act="${ctx.act}">${label}<span class="kbd">Enter</span></button>`
     : `<div class="row"><button class="btn primary" id="nextBtn" data-act="${ctx.act}">${label}</button><span class="kbd">Enter</span></div>`;
 }
+// 정답 한 줄 (정산 다시 볼 문제, 공성전 결과)
+const rightAnswer = (q, cls) => `<p${cls ? ` class="${cls}"` : ''}><b>정답 ${CIRC[q.a]}</b> ${tset(q.c[q.a])}</p>`;
 const showAnswerPair = (f, q, picked) => f?.type === 'bad' && !f.reported && Number.isInteger(picked) && q.c[picked] !== undefined && picked !== q.a;
 // ctx.foot: 다음 버튼을 블록 안에 두지 않는다 (부르는 쪽이 fbNext로 창 아래 버튼 줄에 둔다. 사냥·치료소 창)
 function renderFb(f, q, ctx) {
@@ -3465,7 +3467,8 @@ function renderFb(f, q, ctx) {
 }
 // 보기 줄. 답한 뒤 고른 줄에 빨간 펜 자국: 맞으면 ○(애매함과 상관없이 같은 ○), 틀리면 빗금, 그때 정답 줄은 빗금 뒤에 ○. 나머지 줄은 흐리게
 // 줄 배경과 테두리는 그대로 둔다 (판정 색은 빨간 펜 하나, 그림 원칙). 신고(picked null)는 자국 없이 잠근다
-function choicesHtml(q, run, act) {
+// fb: renderFb에 넘기는 것과 같은 FB(fbOld 거친 것). 오답 대조를 두 곳이 같은 값으로 판정한다
+function choicesHtml(q, run, act, fb) {
   const { answered, picked } = run;
   const got = answered && picked !== null && picked !== undefined;
   const rows = q.c.map((c, k) => {
@@ -3476,7 +3479,7 @@ function choicesHtml(q, run, act) {
   }).join('');
   const shortOptions = q.c.every((option) => option.length <= 14);
   const choices = `<div class="choices${shortOptions ? ' short-options' : ''}">${rows}</div>`;
-  return showAnswerPair(run.fb, q, picked) ? `<details class="all-choices"><summary>전체 보기 다시 확인</summary>${choices}</details>` : choices;
+  return showAnswerPair(fb, q, picked) ? `<details class="all-choices"><summary>전체 보기 다시 확인</summary>${choices}</details>` : choices;
 }
 // 문제 그림 칸(q.image가 있을 때만): 누르면 그림 확대(openZoom). 쓸 수 없는 그림이면 그 사실만 알린다 (신고할 수 있게)
 function qimg(q) {
@@ -3534,7 +3537,7 @@ function winBattle() {
     <p class="qtext">${tset(q.q)}</p>
     ${qimg(q)}
     ${hn && !r.answered ? `<ol class="hints">${hints.slice(0, hn).map((h) => `<li>${tset(h)}</li>`).join('')}</ol>` : ''}
-    ${choicesHtml(q, r, 'ans')}
+    ${choicesHtml(q, r, 'ans', fb)}
     ${renderFb(fb, q, ctx)}` };
 }
 // 조작법 덧창: 어느 화면에서든 열 수 있고 Esc나 닫기로 닫는다
@@ -3615,7 +3618,9 @@ function renderWin() {
   const reading = qwin && (fbEl || body.querySelector('.qtext'));
   if (reading) reading.tabIndex = -1;
   const back = was && findSpot(el, was);
-  if (same) { if (back && !back.disabled) back.focus({ preventScroll: true }); return; }
+  if (back && !back.disabled) { back.focus({ preventScroll: true }); return; }
+  // 창 밖을 보던 중이면 그대로 둔다. 보던 자리가 사라졌거나 잠겼으면(마지막 힌트 뒤 힌트 버튼 등) 처음 자리로
+  if (same && !was) return;
   if (reading) reading.focus({ preventScroll: true });
   // 정산은 '사냥 계속하기'가 있으면 그것(Enter로 다음 사냥), 없으면 '마을로 귀환'
   else if (S.screen === 'battle' || S.screen === 'settle' || S.trial) (body.querySelector('.hunt-progress .btn.primary') || $('#nextBtn'))?.focus({ preventScroll: true });
@@ -3729,6 +3734,8 @@ function renderSiege() {
   document.body.classList.toggle('exam', !!on);
   if (!on) { el.innerHTML = ''; return; }
   const g = S.siege;
+  // 제출 확인이 열린 동안은 답안이 바뀌지 않는다(키도 막는다). 다시 짓지 않아야 확인창의 초점이 머리로 튀지 않는다
+  if (g.confirm && !g.done && el.querySelector('dialog.confirm[open]')) { tick(); return; }
   el.innerHTML = g.done ? siegeResult() : siegeExam();
   const confirm = el.querySelector('dialog.confirm');
   if (confirm) {
@@ -3814,7 +3821,7 @@ function siegeResult() {
     const tags = g.flag[n] ? `${kind} flag` : kind;
     return `<div class="item" data-review="${tags}"${tags.split(' ').includes(initial) ? '' : ' hidden'}><p><b>${n + 1}번</b>${g.flag[n] ? ' <span class="chip">검토 표시</span>' : ''} ${tset(q.q)}</p>
       ${kind === 'wrong' ? `<p class="res-bad">내 답 ${CIRC[mine]} ${tset(q.c[mine])}</p>` : kind === 'blank' ? '<p>안 푼 문제</p>' : ''}
-      <p class="res-ok">정답 ${CIRC[q.a]} ${tset(q.c[q.a])}</p>
+      ${rightAnswer(q, 'res-ok')}
       <details><summary>해설</summary>${exBody({}, q)}</details></div>`;
   }).join('');
   const picker = rows.length ? `<label class="review-picker">다시 볼 문제 <select id="siege-review-filter">${filters.map(([key, label, count]) => `<option value="${key}">${label} (${count})</option>`).join('')}</select></label>` : '<p>복습할 문항이 없어요.</p>';
@@ -9137,7 +9144,8 @@ function sprRig(kind, opt = {}) {
   const plane = new THREE.Mesh(g, mat);
   // 그림자 지도도 현재 칸의 UV와 alphaTest를 써서 몸 윤곽만 바닥에 드리운다.
   // 낮은 화질에서는 그림자 지도를 끄고 makeEnt의 발밑 그림자를 쓴다.
-  plane.castShadow = true; plane.receiveShadow = true;
+  // 받지는 않는다: 카메라를 보는 판이 제 윤곽 그림자(와 옆 판의 그림자)를 제 몸에 얼룩으로 받지 않게
+  plane.castShadow = true; plane.receiveShadow = false;
   body.add(plane);
   return { root, body, kind, plane, uv: g.attributes.uv, frame: -1, def: D, height: D.top || H * 0.85, spr: true, y0: 0, zc: opt.zoneColor !== undefined || opt.fix ? new THREE.Color(opt.fix ? 0xff5a3a : opt.zoneColor) : null, disY: [-D.foot * H, D.top || H * (1 - D.foot)] };
 }
@@ -12385,7 +12393,7 @@ function updateMonster(e, dt) {
 // 시작: 장소 이름 띠와 발밑 빛 (소리 잠금 해제는 view-audio에서 바로 한다)
 onEv('start', () => {
   if (world) showBanner(world.key);
-  if (player && world.key === 'town') arrivalGlow(player.ch.root.position, 0xffe2a0);
+  if (player && world && world.key === 'town') arrivalGlow(player.ch.root.position, 0xffe2a0);
 });
 onEv('engage', () => $('#banner').classList.remove('show'));
 // 화질 바꾸기. 자동으로 돌아오면 처음 판단부터 다시 한다
