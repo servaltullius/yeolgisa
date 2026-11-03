@@ -3592,7 +3592,12 @@ function renderWin() {
   const qwin = !!w && ((S.screen === 'battle' && !!S.run && !!S.run.active) || (!!S.trial && !S.trial.done && S.screen === 'town'));
   document.body.classList.toggle('win-q', qwin);
   document.body.classList.toggle('hunt-question', qwin && S.screen === 'battle' && S.run.mode === 'hunt');
-  if (!w) { el.innerHTML = ''; return; }
+  if (!w) { el.innerHTML = ''; winFocusKey = null; return; }
+  // 같은 문제·같은 창을 다시 그리면(애매함, 힌트, 신고 확인 …) 보던 자리에 초점을 둔다. 새 문제, 답한 직후, 다른 창이면 처음 자리로
+  const r = S.run, t = S.trial;
+  const fkey = qwin ? (S.screen === 'battle' ? `b|${r.active.id}|${r.active.kind}|${r.answered}` : `t|${t.idx}|${t.answered}`) : `${S.screen}|${S.panel || ''}|${S.npc || ''}|${w.title}`;
+  const same = fkey === winFocusKey, was = same && el.contains(document.activeElement) ? focusSpot(document.activeElement) : null;
+  winFocusKey = fkey;
   el.className = `win${qwin ? ' qwin' : ''}${w.cls ? ` ${w.cls}` : ''}`;
   const snd = `<button class="x snd" data-act="mute" aria-label="소리 바꾸기, 지금 ${AUDIO_NAME[OPT.audio]}" title="소리: ${AUDIO_NAME[OPT.audio]}">${OPT.audio ? ICON.sound : ICON.mute}</button>`;
   // 좁은 화면에서는 창이 단축 슬롯을 가리므로 창 머리에도 조작법 버튼을 둔다
@@ -3608,12 +3613,25 @@ function renderWin() {
   tick();
   // 문제 안에서 읽기 시작하면 Tab은 그림·보기 또는 결과의 해설로 이어진다.
   const reading = qwin && (fbEl || body.querySelector('.qtext'));
-  if (reading) {
-    reading.tabIndex = -1;
-    reading.focus({ preventScroll: true });
-  } else if (S.screen === 'battle' || S.screen === 'settle' || S.trial) {
-    $('#nextBtn')?.focus({ preventScroll: true });
-  }
+  if (reading) reading.tabIndex = -1;
+  const back = was && findSpot(el, was);
+  if (same) { if (back && !back.disabled) back.focus({ preventScroll: true }); return; }
+  if (reading) reading.focus({ preventScroll: true });
+  // 정산은 '사냥 계속하기'가 있으면 그것(Enter로 다음 사냥), 없으면 '마을로 귀환'
+  else if (S.screen === 'battle' || S.screen === 'settle' || S.trial) (body.querySelector('.hunt-progress .btn.primary') || $('#nextBtn'))?.focus({ preventScroll: true });
+}
+let winFocusKey = null;
+// 다시 그린 뒤 같은 자리를 찾는 표: id, 아니면 data-act·data-v, 아니면 읽기 자리(본문·결과)
+function focusSpot(a) {
+  if (a.id) return { id: a.id };
+  if (a.dataset && a.dataset.act) return { act: a.dataset.act, v: a.dataset.v };
+  const cls = ['qtext', 'fb'].find((c) => a.classList && a.classList.contains(c));
+  return cls ? { cls } : null;
+}
+function findSpot(root, s) {
+  if (s.id) return root.querySelector(`#${s.id}`);
+  if (s.cls) return root.querySelector(`.${s.cls}`);
+  return Array.from(root.querySelectorAll('[data-act]')).find((b) => b.dataset.act === s.act && b.dataset.v === s.v) || null;
 }
 
 // ---------- 그림 확대 (문제 그림 q.image, WS3.3) ----------
