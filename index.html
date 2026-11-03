@@ -9091,8 +9091,12 @@ const SPR = { on: false, tex: {}, def: {
 for (const [kind, action] of Object.entries({ wizard: 'cast', healer: 'cast', smith: 'hammer', captain: null,
   villager1: null, villager2: null, villager3: null, merchant: null })) {
   SPR.def[kind] = { file: `spr/npc_${kind}.webp`, rows: action ? 2 : 1, h: kind === 'captain' || kind === 'wizard' ? 3.05 : 2.55,
-    top: 2.25, aspect: 0.8, foot: 0.05, act: action ? { [action]: 1 } : {}, walking: kind.startsWith('villager') };
+    top: 2.25, aspect: 0.8, foot: 0.05, act: action ? { [action]: 1 } : {}, walking: kind.startsWith('villager'), calm: true };
 }
+SPR.def.knight.calm = SPR.def.guard.calm = true;
+// 사람 모습(calm)의 서기 줄: 생성 그림 4칸은 고개·손 위치가 칸마다 조금씩 달라, 빨리 넘기면 떨려 보이고 3→0에서 튄다.
+// 그래서 한 칸을 IDLE_HOLD초 쥐고 0→1→2→3→2→1로 왕복하며, 개체마다 seed만큼 어긋나게 시작한다. 박쥐 날갯짓·슬라임 출렁임은 5칸/초 그대로
+const IDLE_SEQ = [0, 1, 2, 3, 2, 1], IDLE_HOLD = 0.75;
 // 게시본은 늘 생성 스프라이트를 쓴다. 로컬 사본(DEV)은 확인 스크립트가 3D 기사의 칼끝을 재므로 주소에 ?spr가 있을 때만
 // 그림 하나를 그 종류의 개체가 모두 같이 쓰고, 칸은 개체마다 판의 UV로 고른다 (그림을 개체마다 복제하면 Texture.copy가 같은 원본을 다시 올리게 해 나올 때마다 큰 그림을 GPU에 다시 보낸다)
 // 칸 수(cols)는 그림 폭 / 320 (앞모습만 4칸, 뒷모습까지 8칸). 첫 장면을 지은 뒤(SKIN.done)에 다 읽으면 켜지 않는다: 3D와 그림이 한 장면에 섞이지 않게
@@ -9163,7 +9167,9 @@ function sprPose(c, d, t) {
   P.scale.x = SPR_V.f.dot(SPR_V.r) > 0 ? -1 : 1;
   const facingAway = SPR_V.f.x * SPR_V.r.z - SPR_V.f.z * SPR_V.r.x;
   if (Math.abs(facingAway) > 0.08) R.back = facingAway > 0;
-  let row = 0, col = D.walking && c.speed < 0.15 ? 1 : Math.floor((t || 0) * 5) % 4;
+  let row = 0, col = D.walking && c.speed < 0.15 ? 1
+    : D.calm ? IDLE_SEQ[Math.floor(((t || 0) + Math.abs(c.seed || 0) * 7.3) / IDLE_HOLD) % IDLE_SEQ.length]
+      : Math.floor((t || 0) * 5) % 4;
   // 기사 9줄 묶음의 뒤 두 줄은 달리기와 기본 베기의 중간 자세다.
   const extended = c.kind === 'knight' && D.rows === 9 && D.cols === 8;
   let extraRow = 0;
