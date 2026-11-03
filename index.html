@@ -694,6 +694,7 @@ body.exam #hud, body.exam #labels { visibility: hidden; }
 .card .steps { margin-top: 0; }
 .card-ans { margin: 0; font-weight: 600; color: var(--gold-2); font-size: 14px; }
 .card .syms { margin: 0; }
+.card-rep { color: var(--warn); }
 .bk-card { margin-left: 8px; padding: 0 8px; font-size: 11.5px; line-height: 20px; vertical-align: 1px; }
 
 /* 메타 조각: 할 일 목록(#quest), 게시판(오늘의 배정, 과목 상태, 목적지), 정산, 장비·대장간·강화 시련 창, 시작 화면 */
@@ -1326,6 +1327,8 @@ function runHotkeys(e) {
 //   처음부터  { k:'x', rid, t, day }  다시 계산은 마지막 처음부터 기록 뒤만 본다 (그 앞 기록은 지우지 않는다)
 //   설정  { k:'c', rid, t, day, cfg: { exam, B, N, crunchNew, reg } }  마지막 설정 기록이 이긴다. 처음부터 기록과 상관없이 남는다 (WS1.4)
 //   이정표  { k:'m', rid, t, day, id, quiet? }  알린 이정표. 한 번만 알리게 남긴다. quiet: 늦게 열어 알리지 않고 지나간 날짜 이정표 (WS1.9)
+//   개념 카드  { k:'k', rid, t, day, item }  처음 본 개념 카드(세세항목). 다시 자동으로 띄우지 않는다. 처음부터 기록 뒤만 센다
+//   카드 신고  { k:'kr' | 'ku', rid, t, day, item }  개념 카드 신고(kr)와 취소(ku). 마지막 것이 이긴다
 const STORE_KEY = 'yeolgisa-store';
 const STORE_BAK = 'yeolgisa-store-bak';
 const SESSION_KEY = 'yeolgisa-session';
@@ -1758,7 +1761,7 @@ function fresh() {
   return { lv: b.lv, exp: b.exp, scrolls: b.scrolls, kills: b.kills, prog, screen: 'town', npc: null, panel: null, run: null, settle: null, siege: null,
     trial: null, trialUsed: [], gear: b.gear,
     healIds: [], assignDone: false, unlockMsg: !a.lock, siegeRewarded: false, tried: {}, started: false, log: [], day,
-    heavy: { day, plan: a.plan, used: 0 }, lastBackup: null, cfg, days: {}, fired: {}, lastRun: null };
+    heavy: { day, plan: a.plan, used: 0 }, lastBackup: null, cfg, days: {}, fired: {}, lastRun: null, cards: {}, cardRep: {} };
 }
 // 날이 바뀌면 하루 단위 표시를 지운다. 새로 열었을 때 restore가 주는 값과 같다: 오늘 평가함(done), 오늘 시련에 나온 문제, 배정 완료, heavy 예산, 신규 잠금 안내
 // 치료 목록(healIds)은 다시 나눈다. 교정 대상은 오늘 평가한 문제뿐이라 어제 오답은 빠지고, 오늘 사냥에서 평가로 나온다
@@ -1971,6 +1974,8 @@ function foldLog(recs, k) {
   let exp = 0, kills = 0, scrolls = 0, assignDone = false, siegeRewarded = false, heavyN = 0;
   const gear = Object.assign({}, b.gear), tried = {}, trialUsed = [], wrongAt = new Map(), healAt = new Map();
   const evs = [], days = {}, fired = {}, assignDays = new Set();
+  // 개념 카드: 본 카드(k) { 세세항목: 처음 본 날 }, 카드 신고(kr)·취소(ku) { 세세항목: 신고한 날 }. '처음부터'(x) 뒤 기록만 센다
+  const cards = {}, cardRep = {};
   // 답한 뒤 신고로 무효가 된 풀이 (신고 기록의 voids). 단계에는 쓰지 않고, 그때 받은 경험치·처치는 그대로 센다 (WS1.6)
   const voids = voidSet(live);
   live.forEach((r, i) => {
@@ -1990,6 +1995,8 @@ function foldLog(recs, k) {
       return;
     }
     if (r.k === 'm') { if (typeof r.id === 'string' && !fired[r.id]) fired[r.id] = r.day; return; }
+    if (r.k === 'k') { if (typeof r.item === 'string' && !cards[r.item]) cards[r.item] = r.day; return; }
+    if (r.k === 'kr' || r.k === 'ku') { if (typeof r.item === 'string') { if (r.k === 'kr') cardRep[r.item] = r.day; else delete cardRep[r.item]; } return; }
     if (r.k !== 'a') return;
     const st = voids.has(r.rid) ? null : stepProg(prog, r, k);
     // 평가 풀이(그날 처음 단계를 정한 평가)만 과목 상태와 공부한 날에 센다. 무효가 된 풀이와 교정·조기 풀이는 빠진다
@@ -2020,7 +2027,7 @@ function foldLog(recs, k) {
     // 치료 목록: 오늘 사냥에서 틀렸고 그 뒤 치료소에서 풀지 않은 문제 (치료소 교정 대상인 것만)
     healIds: [...wrongAt].filter(([id, i]) => !(healAt.get(id) > i)).map(([id]) => id).filter((id) => clsP(prog[id], k, 'heal') === 'fix'),
     // 신규 잠금 안내: 지금 잠금이 없으면 알릴 것이 없다 (잠금이 남아 있으면 풀릴 때 한 번 알린다)
-    unlockMsg: !a.lock, cfg, days, fired, evs,
+    unlockMsg: !a.lock, cfg, days, fired, evs, cards, cardRep,
     // 오늘 쓴 heavy 예산은 저장한 계수기가 아니라 기록에서 다시 센다 (새로 고침으로 예산을 다시 채울 수 없다)
     heavy: { day: k, plan, used: Math.min(heavyCap(plan), heavyN) },
   };
@@ -2033,7 +2040,7 @@ function restore(force) {
   EVS = f.evs; delete f.evs;
   evsVer++; progVer++;
   if (force) msMark();
-  if (!force && S !== S0) { Object.assign(S, { cfg: f.cfg, days: f.days, fired: f.fired }); return false; }
+  if (!force && S !== S0) { Object.assign(S, { cfg: f.cfg, days: f.days, fired: f.fired, cards: f.cards, cardRep: f.cardRep }); return false; }
   Object.assign(S, f);
   varyQ(true);
   if (!force) {
@@ -2185,19 +2192,31 @@ function engage(key) {
   if (r.mode === 'hunt') { FIELD.target = key; emit('engage', { key }); }
   renderHud(); renderQuest(); renderWin();
   if (!r.card) qopen(it.id, it.kind, r.mode);
+  else emit('cardopen', { item: r.card });
 }
 // 개념 카드(CARDS, 문제은행/개념.json): 신규 평가 문제의 세세항목에 카드가 있고 이 브라우저에서 아직 안 봤으면 문제 대신 카드를 먼저 보인다(r.card).
-// 문제는 '문제 풀기'(Enter)로 연다: 그때부터 시간을 재고 qopen. 카드를 읽은 시간은 풀이 시간에 들지 않는다. 본 카드는 OPT.cards에 남고 도감에서 다시 연다
-const cardSeen = (item) => !!(OPT.cards && OPT.cards[item]);
+// 문제는 '문제 풀기'(Enter)로 연다: 그때부터 시간을 재고 qopen. 카드를 읽은 시간은 풀이 시간에 들지 않는다.
+// 본 카드는 학습 기록(k)에 남아 '처음부터'와 함께 지워지고, 도감에서 다시 연다. 카드를 보는 동안에도 읽기 분위기(cardopen)
+const cardSeen = (item) => !!(S.cards && S.cards[item]);
 function cardFor(it) {
   const q = QMAP[it.id], p = q && P(q);
   return it.kind === 'eval' && p && p.stage === null && CARDS[q.item] && !cardSeen(q.item) ? q.item : null;
 }
+// 카드 신고: 틀리거나 이상한 카드를 기록(kr)에 남긴다. 한 번 더 누르면 취소(ku). 문제 신고처럼 학습 상태는 바꾸지 않는다
+function cardReport(item) {
+  if (!CARDS[item]) return;
+  const day = dayKey(today()), on = !(S.cardRep && S.cardRep[item]);
+  STORE.append({ k: on ? 'kr' : 'ku', day, item });
+  S.cardRep = Object.assign({}, S.cardRep);
+  if (on) S.cardRep[item] = day; else delete S.cardRep[item];
+  log(on ? `[신고] 개념 카드 '${CARDS[item].title}'를 신고했어요. 고칠 때까지 그대로 볼 수 있어요.` : `[신고] 개념 카드 '${CARDS[item].title}' 신고를 취소했어요.`, on ? 'warn' : 'dim');
+  renderWin();
+}
 function cardGo() {
   const r = S.run;
   if (!r || !r.active || !r.card) return;
-  OPT.cards = Object.assign({}, OPT.cards, { [r.card]: dayKey(today()) });
-  saveOpt();
+  const day = dayKey(today());
+  if (!cardSeen(r.card)) { STORE.append({ k: 'k', day, item: r.card }); S.cards = Object.assign({}, S.cards, { [r.card]: day }); }
   r.card = null; r.qStart = CLOCK.now();
   renderWin();
   qopen(r.active.id, r.active.kind, r.mode);
@@ -2941,6 +2960,7 @@ ACTS.ans = (b) => answer(Number(b.dataset.v));
 ACTS.unsure = () => toggleUnsure();
 ACTS.hint = () => useHint();
 ACTS.cardgo = () => cardGo();
+ACTS.cardrpt = (b) => cardReport(b.dataset.v);
 ACTS.report = () => report();
 ACTS.next = () => next();
 ACTS.engage = (b) => engage(b.dataset.v);
@@ -3183,7 +3203,7 @@ function knownItems() {
 function winBook() {
   // 개념 카드 다시 보기 (세세항목 줄의 '개념' 버튼)
   if (bookCard && CARDS[bookCard]) {
-    return { title: '세세항목 도감', close: true, body: `${cardHtml(CARDS[bookCard], bookCard)}<div class="actions"><button class="btn" data-act="card" data-v="">도감으로</button>${closeBtn}</div>` };
+    return { title: '세세항목 도감', close: true, body: `${cardHtml(CARDS[bookCard], bookCard)}<div class="actions"><button class="btn" data-act="card" data-v="">도감으로</button>${cardRptBtn(bookCard)}${closeBtn}</div>` };
   }
   const known = knownItems(), byItem = new Map();
   Q.forEach((q) => { if (!byItem.has(q.item)) byItem.set(q.item, []); byItem.get(q.item).push(q); });
@@ -3593,7 +3613,7 @@ function winBattle() {
   const name = item.kind === 'fix' && !heal ? `돌아온 ${qName(q)}` : qName(q);
   // 개념 카드를 먼저 (logic-core cardFor): 읽고 '문제 풀기'(Enter)를 누르면 문제가 열리고 시간을 잰다
   if (r.card && CARDS[r.card]) {
-    return { title: esc(name), cls: heal ? '' : kc, sub, foot: `<div class="fl">${back}</div><button class="btn primary" id="nextBtn" data-act="cardgo">문제 풀기<span class="kbd">Enter</span></button>`,
+    return { title: esc(name), cls: heal ? '' : kc, sub, foot: `<div class="fl">${cardRptBtn(r.card)}${back}</div><button class="btn primary" id="nextBtn" data-act="cardgo">문제 풀기<span class="kbd">Enter</span></button>`,
       body: `<p class="say card-lead">처음 만나는 세세항목이에요. 개념을 먼저 보고 풀어요. 도감(B)에서 언제든 다시 볼 수 있어요.</p>${cardHtml(CARDS[r.card], r.card)}` };
   }
   return { title: esc(name), cls: heal ? '' : kc, sub, foot, body: `
@@ -3620,10 +3640,15 @@ function symHtml(q, r) {
 }
 function symRows(L) { return L.map((o) => `<div><dt>${tset(o.s)}</dt><dd><b>${esc(o.read)}</b> ${tset(o.mean)}${o.unit && o.unit !== '-' ? ` <span class="u">${tset(o.unit)}</span>` : ''}</dd></div>`).join(''); }
 // 개념 카드 한 장 (문제 창의 첫 만남, 도감의 다시 보기가 같이 쓴다): 무엇인지, 핵심 식과 기호, 흔한 실수, 풀이 예제
+// 카드 신고 버튼 (logic-core cardReport): 신고한 카드는 '신고 취소'로 되돌린다
+function cardRptBtn(item) {
+  const on = !!(S.cardRep && S.cardRep[item]);
+  return `<button class="btn rpt" data-act="cardrpt" data-v="${item}" aria-pressed="${on}" title="카드의 설명·식·예제가 틀리거나 이상하면 신고해 두세요. 학습 상태는 바뀌지 않아요">${on ? '신고 취소' : '카드 신고'}</button>`;
+}
 function cardHtml(c, item) {
-  const it = ITEMS.find((x) => x.id === item);
+  const it = ITEMS.find((x) => x.id === item), rep = !!(S.cardRep && S.cardRep[item]);
   const steps = c.example.steps.map((x) => `<li><span>${tset(x)}</span></li>`).join('');
-  return `<article class="card"><p class="card-k">개념${it ? ` · ${esc(it.name)}` : ''}</p><h3 class="card-t">${esc(c.title)}</h3>
+  return `<article class="card"><p class="card-k">개념${it ? ` · ${esc(it.name)}` : ''}${rep ? ' · <span class="card-rep">신고함</span>' : ''}</p><h3 class="card-t">${esc(c.title)}</h3>
     ${c.what.map((x) => `<p class="card-what">${tset(x)}</p>`).join('')}
     <div class="card-f"><span>핵심 식</span><p>${tset(c.formula)}</p></div>
     ${c.sym && c.sym.length ? `<div class="syms"><dl>${symRows(c.sym)}</dl></div>` : ''}
@@ -4129,6 +4154,13 @@ function start(data) {
   // rollover 사건은 환영 안내와 첫 그리기 뒤에 나간다 (처리기가 log를 남겨도 intro를 건너뛰지 않게)
   held(() => {
     STORE.load();
+    // v85에서 개념 카드를 본 기록을 개인 설정(OPT.cards)에 두었다. 학습 기록(k)으로 한 번 옮기고 설정에서는 지운다
+    if (OPT.cards && typeof OPT.cards === 'object') {
+      Object.entries(OPT.cards).forEach(([item, day]) => {
+        if (CARDS[item] && !(S.cards && S.cards[item]) && typeof day === 'string') { STORE.append({ k: 'k', day, item }); S.cards = Object.assign({}, S.cards, { [item]: day }); }
+      });
+      delete OPT.cards; saveOpt();
+    }
     STORE.rollover();
     titleFoot();
     if (S.started) { $('#title').hidden = true; document.body.classList.add('started'); }
@@ -4544,6 +4576,8 @@ const cue = (name, d) => SND.cue(name, d);
 // qopen이면 1로, judge, 답하지 않고 닫힘(qclose: 판 끝, 시련 그만두기), 귀환 주문서 recall, 장면 버림이면 0으로 간다
 const MOOD = { reading: 0, want: 0, u: 0 };
 onEv('qopen', () => { MOOD.want = 1; });
+// 개념 카드를 읽는 동안도 문제를 읽을 때처럼 차분하게 (logic-core engage → cardopen, '문제 풀기'에서 qopen)
+onEv('cardopen', () => { MOOD.want = 1; });
 onEv('judge', () => { MOOD.want = 0; });
 onEv('settle', () => { MOOD.want = 0; });
 onEv('qclose', () => { MOOD.want = 0; });
@@ -6411,6 +6445,8 @@ const SND = (() => {
     restate();
   }
   function onRelax() { ST.read = false; restate(); }
+  // 개념 카드를 읽는 동안: 문제를 읽을 때처럼 한가한 소리를 버린다 (qopen 알림음은 '문제 풀기'에서)
+  function onRead() { ST.read = true; restate(); }
 
   // ---------- 확인용 ----------
   const pv = (p) => +p.value.toFixed(3);
@@ -6484,7 +6520,7 @@ const SND = (() => {
   }
   return {
     unlock, setLevel, play: (n) => cue(n), cue, ambient, music, stopMusic, state, rms, peak, duck, renderOffline, readout, vis, retier, applyVol, vol,
-    onQopen, onJudge, onRelax, restate, FINS,
+    onQopen, onJudge, onRelax, onRead, restate, FINS,
     tier: (t) => { tierForce = t || null; retier(); return G ? G.tier : tierWant(); },
     trace: (clear) => { const r = TR.slice(); if (clear) TR.length = 0; return r; },
     ctx: () => ctx, CUE, LOUD, ZKEY, MUS, MST, SFX, sessionPlan,
@@ -6511,6 +6547,7 @@ onEv('sound', () => { SND.unlock(); SND.setLevel(); }, { sync: true });
 onEv('judge', (d) => SND.onJudge(d), { sync: true });
 // 문제 열림: 숨 소리와 함께 음악을 읽는 상태로 (0.3초에 선율·뜯기 0)
 onEv('qopen', () => SND.onQopen(), { sync: true });
+onEv('cardopen', () => SND.onRead(), { sync: true });
 ['qclose', 'settle', 'recall'].forEach((n) => onEv(n, () => SND.onRelax(), { sync: true }));
 // 마무리 세기는 처치 확정 몬스터 키로 적어 둔다 (휘두름·타격이 payload 없이 와도 읽게. 규칙 쪽 attack은 view-combat보다 먼저 받는다)
 onEv('attack', (d) => { if (d && d.key) { if (SND.FINS.size > 32) SND.FINS.clear(); SND.FINS.set(d.key, d.fin ?? (d.crit ? 'heavy' : 'normal')); } }, { sync: true });
