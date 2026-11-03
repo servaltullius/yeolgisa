@@ -390,6 +390,8 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
 #reading-size { display: none; }
 /* PC에서 문제, 보기, 해설을 함께 키운다. 창 밖의 기본 체크 상자는 다음 문제에서도 선택을 유지한다. */
 @media (min-width: 1000px) and (min-height: 560px) {
+  /* 문제·개념 카드 창은 글이 길어 다른 창보다 넓게 (넓은 화면일수록 넓게, 600px까지) */
+  body.win-q { --win-w: clamp(420px, 38vw, 600px); }
   body.win-q #win .win-h { padding-right: 100px; }
   body.win-q:not(:has(#help:not([hidden]), #zoom:not([hidden]))) #reading-size {
     position: absolute; top: 22px; right: calc(var(--gr) + 10px); z-index: 31;
@@ -405,6 +407,10 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
   body.win-q:has(#reading-size input:checked) .qwin .qtext { font-size: 21px; line-height: 1.65; }
   body.win-q:has(#reading-size input:checked) .qwin :is(.choice, .steps, .ex, .answer-pair) { font-size: 18px; }
   body.win-q:has(#reading-size input:checked) .qwin :is(.ref, .exh, details summary) { font-size: 16px; }
+  body.win-q:has(#reading-size input:checked) .qwin :is(.hints, .syms dl, .card-what, .card-miss, .card-exq, .card-ans) { font-size: 18px; }
+  body.win-q:has(#reading-size input:checked) .qwin :is(.sym-h, .sym-later, .card-lead, .card-k, .card-f > span, .card h4) { font-size: 15.5px; }
+  body.win-q:has(#reading-size input:checked) .qwin .card-f p { font-size: 23px; }
+  body.win-q:has(#reading-size input:checked) .qwin .card-t { font-size: 26px; }
   .qwin .choices:has(.wrong) .choice:is(.right, .wrong) { grid-template-columns: 28px minmax(0, 1fr) auto; }
   .qwin .choices:has(.wrong) .choice.right::after { content: "정답"; color: var(--gold-2); }
   .qwin .choices .choice.wrong::after { content: "내 답"; color: var(--muted); }
@@ -432,8 +438,8 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
 .tag.new { color: var(--new); border-color: #7a6326; }
 .qtext { margin: 0 0 12px; font-size: 16.5px; line-height: 1.75; text-wrap: pretty; color: #fbf6ea; }
 /* 작은 조판(logic-kit tset): 첨자는 줄 높이를 늘리지 않는다. 분수는 위아래로 쌓고 가는 선 하나 */
-.win sub, .win sup, .cbt sub, .cbt sup { font-size: .72em; line-height: 0; }
-.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .84em; line-height: 1.2; margin: 0 .14em; }
+.win sub, .win sup, .cbt sub, .cbt sup { font-size: .8em; line-height: 0; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .94em; line-height: 1.25; margin: 0 .14em; }
 .frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em 1px; }
 .frac > span:last-child { padding: 1px .2em 0; }
 /* 문제 그림 칸: 누르면 3D 자리에 크게 (#zoom) */
@@ -498,18 +504,18 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
 .sc .hr { width: 15px; height: 15px; margin-left: -5px; color: var(--muted); }
 @keyframes pmark { from { opacity: 0; } to { opacity: 1; } }
 .dead-note { font-size: 13.5px; color: #ff8f80; }
-.ex { font-size: 14px; margin: 6px 0 0; line-height: 1.8; }
-details summary { cursor: pointer; color: var(--sys); font-size: 13.5px; }
-.exh { font-size: 13.5px; color: var(--sys); }
+.ex { font-size: 15px; margin: 6px 0 0; line-height: 1.8; }
+details summary { cursor: pointer; color: var(--sys); font-size: 14px; }
+.exh { font-size: 14px; color: var(--sys); }
 /* 계산 풀이 단계: 번호는 숫자 폭을 맞추고, 마지막 줄(결과)만 굵게와 위 가는 선 */
-.steps { list-style: none; counter-reset: st; margin: 8px 0 0; padding: 0; display: grid; gap: 3px; font-size: 14px; line-height: 1.7; font-variant-numeric: tabular-nums; }
+.steps { list-style: none; counter-reset: st; margin: 8px 0 0; padding: 0; display: grid; gap: 3px; font-size: 15px; line-height: 1.7; font-variant-numeric: tabular-nums; }
 .steps li { counter-increment: st; display: grid; grid-template-columns: 1.6em minmax(0, 1fr); align-items: baseline; }
 .steps li::before { content: counter(st); color: var(--muted); font-size: 12px; }
 .steps li.res { margin-top: 2px; padding-top: 4px; border-top: 1px solid rgba(168, 134, 80, .3); font-weight: 600; color: #fbf6ea; }
 .steps + .ex { margin-top: 8px; }
 /* 근거 줄: 교재 쪽수, 법령 조문, 공식 */
-.ref { margin: 8px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
-.ref span { margin-right: 8px; color: var(--text); }
+.ref { margin: 8px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+.ref > span { margin-right: 8px; color: var(--text); }
 
 /* 그림 확대: 3D 자리(창 왼쪽, 폰은 시트 위 띠)에만. 자리와 크기는 logic-ui layoutZoom이 창 상자에서 정해 인라인으로 넣는다. HUD 위, 창 아래 */
 #zoom { position: absolute; z-index: 20; display: flex; background: rgba(8, 7, 6, .94); border: 1px solid var(--edge); border-radius: 2px; box-shadow: 0 12px 30px rgba(0, 0, 0, .55); }
@@ -598,7 +604,7 @@ body.exam #hud, body.exam #labels { visibility: hidden; }
 .rev .item p { margin: 0 0 4px; }
 .review-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; font-weight: 600; }
 .review-picker select { font: inherit; color: var(--cbt-ink); background: var(--cbt-panel); border: 1px solid var(--cbt-line); border-radius: 3px; padding: 7px 10px; }
-.rev .steps li.res, .rev .ref span { color: var(--cbt-ink); }
+.rev .steps li.res, .rev .ref > span { color: var(--cbt-ink); }
 .rev .ref, .rev .steps li::before { color: var(--cbt-sub); }
 .cbt .res-ok { color: var(--cbt-ok); }
 .cbt .res-bad { color: var(--cbt-bad); }
@@ -660,39 +666,39 @@ body.exam #hud, body.exam #labels { visibility: hidden; }
   .choice:active:not(:disabled) { transform: none; }
 }
 /* 단계 힌트 (logic-ui winBattle, 계산 문제): 문제 아래, 보기 위. 연 만큼 번호를 붙여 차례로 */
-.hints { margin: 6px 0 10px; padding: 8px 10px 8px 30px; border: 1px dashed #6a5a3a; border-radius: 3px; background: rgba(40, 32, 18, .45); font-size: 13.5px; line-height: 1.55; color: #e8dcc0; display: grid; gap: 3px; }
+.hints { margin: 6px 0 10px; padding: 8px 10px 8px 30px; border: 1px dashed #6a5a3a; border-radius: 3px; background: rgba(40, 32, 18, .45); font-size: 14.5px; line-height: 1.6; color: #e8dcc0; display: grid; gap: 3px; }
 .hints li::marker { color: var(--gold); }
 /* 기호 풀이 (logic-ui symHtml): 문제 글 아래, 힌트 위. 접고 펼 수 있고 펼침은 기억한다. 기호 칸은 폭을 맞춰 뜻이 한 줄로 이어진다 */
 .syms { margin: -2px 0 10px; border-left: 2px solid rgba(168, 134, 80, .45); padding-left: 10px; }
-.sym-h { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 2px 0; cursor: pointer; color: var(--sys); font-size: 13px; }
+.sym-h { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 2px 0; cursor: pointer; color: var(--sys); font-size: 14px; }
 .sym-h .chev { width: 12px; height: 12px; transition: transform .15s ease; }
 .sym-h[aria-expanded="true"] .chev { transform: rotate(90deg); }
-.sym-h em { font-style: normal; margin-left: 5px; color: var(--muted); font-size: 12px; }
-.syms dl { margin: 3px 0 0; display: grid; gap: 2px; font-size: 12.5px; line-height: 1.45; }
+.sym-h em { font-style: normal; margin-left: 5px; color: var(--muted); font-size: 13px; }
+.syms dl { margin: 4px 0 0; display: grid; gap: 4px; font-size: 14px; line-height: 1.5; }
 .syms dl > div { display: grid; grid-template-columns: 3.4em minmax(0, 1fr); gap: 6px; align-items: baseline; }
 .syms dt { color: var(--gold-2); font-weight: 600; white-space: nowrap; }
 .syms dd { margin: 0; min-width: 0; color: #e8dcc0; }
 .syms dd b { color: var(--text); font-weight: 500; margin-right: 4px; }
 .syms .u { color: var(--muted); white-space: nowrap; }
 .sym-h .kbd { margin-left: 8px; }
-.sym-later { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.sym-later { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .sym-h .chev { transition: none; } }
 
 /* 개념 카드 (logic-ui cardHtml): 처음 만나는 세세항목의 개념 설명. 문제 창(첫 만남)과 도감(다시 보기)이 같이 쓴다. 해설과 같은 결의 글, 핵심 식만 띠로 돋운다 */
-.card-lead { font-size: 13.5px; color: var(--muted); margin-bottom: 10px; }
-.card { display: grid; gap: 8px; }
-.card-k { margin: 0; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
-.win .card-t { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 20px; line-height: 1.35; color: var(--gold-2); letter-spacing: 0; }
-.card-what { margin: 0; font-size: 14.5px; line-height: 1.75; color: #f3ead8; }
-.card-f { display: grid; gap: 2px; padding: 8px 12px; border-left: 2px solid var(--gold); background: rgba(0, 0, 0, .28); }
-.card-f span { font-size: 12px; color: var(--muted); }
-.card-f p { margin: 0; font-size: 17px; line-height: 1.6; color: #fbf6ea; }
-.win .card h4 { margin: 6px 0 0; font-size: 12.5px; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
-.card-miss { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 13.5px; line-height: 1.6; color: #e8dcc0; }
+.card-lead { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+.card { display: grid; gap: 10px; }
+.card-k { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+.win .card-t { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 22px; line-height: 1.35; color: var(--gold-2); letter-spacing: 0; }
+.card-what { margin: 0; font-size: 16px; line-height: 1.75; color: #f3ead8; }
+.card-f { display: grid; gap: 4px; padding: 10px 14px; border-left: 2px solid var(--gold); background: rgba(0, 0, 0, .28); }
+.card-f > span { font-size: 13px; color: var(--muted); }
+.card-f p { margin: 0; font-size: 19px; line-height: 1.7; color: #fbf6ea; }
+.win .card h4 { margin: 6px 0 0; font-size: 13.5px; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+.card-miss { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px; line-height: 1.65; color: #e8dcc0; }
 .card-miss li::marker { color: var(--warn); }
-.card-exq { margin: 0; font-size: 14px; line-height: 1.7; }
+.card-exq { margin: 0; font-size: 15px; line-height: 1.75; }
 .card .steps { margin-top: 0; }
-.card-ans { margin: 0; font-weight: 600; color: var(--gold-2); font-size: 14px; }
+.card-ans { margin: 0; font-weight: 600; color: var(--gold-2); font-size: 15.5px; }
 .card .syms { margin: 0; }
 .card-rep { color: var(--warn); }
 .bk-card { margin-left: 8px; padding: 0 8px; font-size: 11.5px; line-height: 20px; vertical-align: 1px; }
