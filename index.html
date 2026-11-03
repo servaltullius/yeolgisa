@@ -9155,16 +9155,20 @@ function sprRig(kind, opt = {}) {
 }
 // 한 프레임: 카메라를 보게 돌리고, 보는 방향에 따라 좌우를 뒤집고, 동작에 맞는 칸을 고른다
 // 달리기는 빠르기(c.speed)만큼 칸을 넘기고 c.phase를 늘린다 (발소리, view-audio의 audSteps가 π마다 한 걸음)
-const SPR_V = { q: new THREE.Quaternion(), f: new THREE.Vector3(), r: new THREE.Vector3() };
+const SPR_V = { q: new THREE.Quaternion(), f: new THREE.Vector3(), r: new THREE.Vector3() }, SPR_FLIP = 0.2;
 function sprPose(c, d, t) {
   const R = c.rig, P = R.plane, D = R.def;
   R.body.position.set(0, R.y0, 0); R.body.scale.set(1, 1, 1);
   R.root.getWorldQuaternion(SPR_V.q).invert();
   P.quaternion.copy(SPR_V.q).multiply(camera.quaternion);
   // 그림은 화면 왼쪽 아래를 본다. 개체가 화면 오른쪽을 보면 좌우를 뒤집는다
+  // 화면 위아래(카메라 앞뒤)를 볼 때는 판정값이 0 근처라 카메라·방향이 조금만 흔들려도 좌우가 계속 바뀌었다(원래 방향 45°의 NPC, 화면 안쪽으로 걷는 기사).
+  // 그래서 ±SPR_FLIP을 넘을 때만 바꾸고 그 사이에서는 직전 방향을 쥔다
   SPR_V.f.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
   SPR_V.r.set(1, 0, 0).applyQuaternion(camera.quaternion);
-  P.scale.x = SPR_V.f.dot(SPR_V.r) > 0 ? -1 : 1;
+  const side = SPR_V.f.dot(SPR_V.r);
+  if (side > SPR_FLIP) R.flip = -1; else if (side < -SPR_FLIP || R.flip === undefined) R.flip = 1;
+  P.scale.x = R.flip;
   const facingAway = SPR_V.f.x * SPR_V.r.z - SPR_V.f.z * SPR_V.r.x;
   if (Math.abs(facingAway) > 0.08) R.back = facingAway > 0;
   let row = 0, col = D.walking && c.speed < 0.15 ? 1
