@@ -2160,7 +2160,7 @@ function removeMon(key, how) {
 // pre·rid는 마지막 답의 답하기 전 학습 상태와 풀이 기록 id (그 답을 신고하면 되돌린다)
 function newRun(mode, zone, items) {
   return { mode, zone, pending: items, fixq: [], active: null, hp: mode === 'heal' ? null : 5, results: [], exp: 0, scrolls: 0, ms: 0,
-    died: false, qStart: 0, answered: false, unsure: false, hint: 0, picked: null, fb: null, pos: {}, fixAnnounced: false,
+    died: false, qStart: 0, answered: false, unsure: false, hint: 0, picked: null, fb: null, pos: {}, vacated: null, fixAnnounced: false,
     lv0: S.lv, exp0: S.exp, done0: assignCount().done, finale: false, pre: null, rid: null };
 }
 const visibleItems = (r) => (r.pending.length ? r.pending : r.fixq).slice(0, 4);
@@ -2172,7 +2172,8 @@ function syncMonsters() {
   vis.forEach((it) => {
     const key = mkey(it);
     if (!r.pos[key]) {
-      let slot = SLOTS.findIndex((_, i) => !used.has(i));
+      let slot = SLOTS.findIndex((_, i) => !used.has(i) && i !== r.vacated);
+      if (slot < 0) slot = SLOTS.findIndex((_, i) => !used.has(i));
       if (slot < 0) slot = 0;
       used.add(slot);
       r.pos[key] = { slot, x: SLOTS[slot][0], y: SLOTS[slot][1] };
@@ -2492,6 +2493,8 @@ function finishActive() {
   r.pending = r.pending.filter((x) => mkey(x) !== key);
   r.fixq = r.fixq.filter((x) => mkey(x) !== key);
   r.active = null;
+  // 방금 비운 자리(도망·처치 연출이 아직 그 자리에 있다)에는 다음 몬스터를 바로 세우지 않는다 (syncMonsters)
+  r.vacated = r.pos[key] ? r.pos[key].slot : null;
   removeMon(key, 'flee');
   if (r.died || (!r.pending.length && !r.fixq.length)) { endRun(); return false; }
   if (r.mode === 'hunt' && !r.pending.length && r.fixq.length && !r.fixAnnounced) {
@@ -12601,6 +12604,31 @@ function updatePlayer(dt) {
 // 화면 기준 [오른쪽, 안쪽]. 음수 안쪽이 카메라 쪽(앞쪽)이라 NPC가 카메라를 향해 말한다
 const TALK_AT = { smith: [0.9, -1.0] };
 
+// 몬스터끼리 떨어져 설 거리: 두 몬스터 반지름의 합 (발밑 그림자 크기에 맞춤)
+const monR = (m) => (m.model === 'golem' ? 1.0 : m.model === 'bat' ? 0.65 : 0.8);
+const liveMons = (e) => [...ENT.values()].filter((o) => o !== e && o.kind === 'mon' && !o.dying);
+// 거닐 자리: 제자리 둘레에서 고르되, 다른 몬스터가 서 있거나 가려는 자리 가까이는 피한다 (여섯 번 안에 못 고르면 그 자리에 선다)
+function wanderTo(e) {
+  const others = liveMons(e);
+  for (let i = 0; i < 6; i++) {
+    const p = [e.base[0] + rand(-1.5, 1.5), e.base[1] + rand(-1.3, 1.3)];
+    const near = others.some((o) => { const need = monR(e) + monR(o) + 0.3; return Math.hypot(p[0] - o.sx, p[1] - o.sy) < need || (o.wander.to && Math.hypot(p[0] - o.wander.to[0], p[1] - o.wander.to[1]) < need); });
+    if (!near) return p;
+  }
+  return [e.sx, e.sy];
+}
+// 이미 겹쳤으면(새로 나온 몬스터 옆, 거닐다 닿음) 초당 2.5만큼씩 밀려나 튀지 않고 비켜 선다
+function monSep(e, dt) {
+  liveMons(e).forEach((o) => {
+    const dx = e.sx - o.sx, dy = e.sy - o.sy, d = Math.hypot(dx, dy), need = monR(e) + monR(o);
+    if (d >= need) return;
+    const ux = d > 1e-4 ? dx / d : 1, uy = d > 1e-4 ? dy / d : 0, st = Math.min(need - d, dt * 2.5);
+    e.sx += ux * st; e.sy += uy * st;
+    if (e.wander.to && Math.hypot(e.wander.to[0] - o.sx, e.wander.to[1] - o.sy) < need) e.wander.to = null;
+  });
+  if (world) { const b = world.bounds; e.sx = clamp(e.sx, b[0], b[1]); e.sy = clamp(e.sy, b[2], b[3]); }
+}
+
 // ---------- 몬스터 ----------
 function updateMonster(e, dt) {
   if (e.dying) { updateDying(e, dt); return; }
@@ -12627,13 +12655,15 @@ function updateMonster(e, dt) {
     // 문제를 읽는 동안에는 둘레의 몬스터도 천천히 거닌다 (CALM.k: 1 → 0.1)
     const wd = dt * CALM.k;
     e.wander.t -= wd;
-    if (e.wander.t <= 0) { e.wander.t = rand(2.2, 4.6); e.wander.to = [e.base[0] + rand(-1.5, 1.5), e.base[1] + rand(-1.3, 1.3)]; }
+    if (e.wander.t <= 0) { e.wander.t = rand(2.2, 4.6); e.wander.to = wanderTo(e); }
     if (e.wander.to && !reducedMotion) {
       const dx = e.wander.to[0] - e.sx, dy = e.wander.to[1] - e.sy, d = Math.hypot(dx, dy);
       if (d > 0.05) { const st = Math.min(d, wd * 0.9 * e.speedMax); e.sx += (dx / d) * st; e.sy += (dy / d) * st; moving = true; faceToward(e, dx, dy); }
     }
   }
   e.ch.speed = lerp(e.ch.speed, moving ? 0.45 * CALM.k : 0, Math.min(1, dt * 6));
+  // 다른 몬스터와 겹치지 않게 비켜 선다 (상대 중인 몬스터는 기사가 맞춰 서 있으니 움직이지 않고, 둘레의 몬스터가 비킨다)
+  if (!isT && !e.engaged) monSep(e, dt);
   setW(e.ch.root, e.sx, e.sy);
   if (e.ch.rig.fx) e.ch.rig.fx(dt, e.ch.root.position, e.ch.root);
   // 판 끝에 돌아온 교정 몬스터는 발밑에 붉은 기운이 피어오른다
@@ -12650,7 +12680,8 @@ onEv('start', () => {
   if (world) showBanner(world.key);
   if (player && world && world.key === 'town') arrivalGlow(player.ch.root.position, 0xffe2a0);
 });
-onEv('engage', () => $('#banner').classList.remove('show'));
+// 몬스터와 붙으면 땅을 눌러 찍어 둔 목적지는 버린다 (처치·도망 뒤 기사가 옛 자리로 혼자 걸어가지 않게)
+onEv('engage', () => { $('#banner').classList.remove('show'); PL.dest = null; clickRing.visible = false; });
 // 화질 바꾸기. 자동으로 돌아오면 처음 판단부터 다시 한다
 onEv('gfx', () => {
   if (YV.opt && YV.opt.gfx === 'auto') { autoLevel = AUTO_START; perfBase = 1; slowWin = 0; fastWin = 0; upBlocked = false; raised = false; perfT = 0; perfS.length = 0; }
