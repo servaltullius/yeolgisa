@@ -865,6 +865,18 @@ body.win-open #quest { display: none; }
 .bk-cells i.bk-ancient { background: #ffe6a8; box-shadow: 0 0 5px rgba(255, 220, 140, .7); }
 .bk-cells em { font-size: 11px; color: var(--muted); font-style: normal; }
 .kvs.bk-kvs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 신고 목록 (logic-meta winReports): 줄마다 이름·과목·세세항목·신고한 날, 문제 글 두 줄, 오른쪽에 취소 버튼 */
+.rp-list { display: grid; gap: 6px; }
+.rp-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 3px; background: rgba(0, 0, 0, .22); }
+.rp-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rp-main b { font-weight: 600; color: var(--text); }
+.rp-main small { font-size: 12.5px; color: var(--muted); }
+.rp-q { margin: 2px 0 0; font-size: 13.5px; line-height: 1.55; color: #e8dcc0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.rp-row > .btn, .rp-btns { flex: none; }
+.rp-btns { display: flex; gap: 6px; }
+.rp-row .btn.arm { border-color: #8b3b31; color: #ffb3a8; background: rgba(212, 72, 62, .16); }
+.rp-n { margin-left: 4px; color: var(--warn); font-weight: 600; }
+@media (max-width: 520px) { .rp-row { flex-wrap: wrap; } .rp-row > .btn, .rp-btns { margin-left: auto; } }
 
 /* 필드 위 조각: 3D 화면 위에 겹치는 글자 층(#labels)의 이름표, 말풍선, 떠오르는 숫자, 원 안내 글자와 화면 번쩍임(#flash) */
 
@@ -1330,7 +1342,7 @@ function runHotkeys(e) {
 //   풀이  { k:'a', rid, t, day, qid, rev, form(다른 판 번호, 0 원래 판), hint?(연 단계 힌트 수), mode('hunt'|'heal'|'trial'), kind('eval'|'fix'|'early'), pick, correct, unsure, ms, ex, exRead, exp, kill, voided, fin }
 //         fin: 그때 보인 마무리 세기('normal'|'medium'|'heavy'|null). 다시 계산할 때 오늘 쓴 heavy 예산을 센다 (WS1.7 전 기록에는 없다)
 //   신고  { k:'r', rid, t, day, qid, rev, mode, voids? }  voids: 답한 뒤 신고했으면 무효로 한 풀이의 rid (단계·HP는 되돌리고 경험치는 남긴다, WS1.6)
-//   신고 취소  { k:'u', rid, t, day, qid, rev }  설정의 신고 목록에서 되돌림. 무효가 된 풀이는 그대로 무효
+//   신고 취소  { k:'u', rid, t, day, qid, rev }  도감의 신고 목록에서 되돌림. 무효가 된 풀이는 그대로 무효
 //   보상  { k:'g', rid, t, day, what('assign'|'heal'|'siege'|'enchant'|'trial'), exp, scrolls, slot?, lv?, ok?, pass? }  경험치·주문서·장비가 바뀐 일
 //   처음부터  { k:'x', rid, t, day }  다시 계산은 마지막 처음부터 기록 뒤만 본다 (그 앞 기록은 지우지 않는다)
 //   설정  { k:'c', rid, t, day, cfg: { exam, B, N, crunchNew, reg } }  마지막 설정 기록이 이긴다. 처음부터 기록과 상관없이 남는다 (WS1.4)
@@ -1577,7 +1589,7 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // ---------- 설정 S.cfg (기획서 10장 설정 화면, WS1.4) ----------
 // exam 시험일 'YYYY-MM-DD', B 하루 예산, N 신규 상한, crunchNew 막판 구간에도 신규(평가하지 않은 세세항목만), reg 원서접수일 | null.
-// 설정 기록(k:'c')으로 남기고 마지막 기록이 이긴다. '처음부터'로 지워지지 않는다. 바꾸면 기록 전체를 새 설정으로 다시 계산한다(setCfg). 신고 목록은 LOG.reported()
+// 설정 기록(k:'c')으로 남기고 마지막 기록이 이긴다. '처음부터'로 지워지지 않는다. 바꾸면 기록 전체를 새 설정으로 다시 계산한다(setCfg). 신고 목록(도감)은 LOG.reported()
 // 기본 B 45·N 15: 하루 1시간 남짓 (2026-11-03 사용자 답. 문제당 약 100초 어림으로 시험 전까지 300문제를 다 본다)
 const CFG0 = { exam: dayKey(EXAM), B: 45, N: 15, crunchNew: false, reg: null };
 const isDayKey = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && dayKey(keyDay(v)) === v;
@@ -2066,7 +2078,7 @@ const saveSession = () => STORE.session.write(S.siege ? { siege: S.siege } : nul
 const voidSet = (recs) => new Set(recs.filter((r) => r && r.k === 'r' && r.voids).map((r) => r.voids));
 // 풀이 기록 읽기 (WS2·WS3 화면이 쓴다)
 // attempts(qid): 그 문제의 풀이 기록, 오래된 것부터. 신고로 무효가 된 풀이는 사본에 voided: true (통계·오답 노트는 빼고 센다)
-// reported(): 지금 신고된 문제 [{ id, day: 신고한 날, rev }] (설정의 신고 목록, WS2.5. 취소는 unreport(id))
+// reported(): 지금 신고된 문제 [{ id, day: 신고한 날, rev }] (도감 › 신고 목록, logic-meta winReports. 취소는 unreport(id))
 // 문제별 색인은 기록이 바뀔 때(STORE.ver)만 다시 만든다 (1,000문제 은행에서 화면이 문제마다 불러도 기록 전체를 매번 훑지 않게). 돌려주는 배열은 사본이다
 let logIx = { ver: -1, byQ: new Map() };
 function logIndex() {
@@ -2223,7 +2235,7 @@ function cardReport(item) {
   STORE.append({ k: on ? 'kr' : 'ku', day, item });
   S.cardRep = Object.assign({}, S.cardRep);
   if (on) S.cardRep[item] = day; else delete S.cardRep[item];
-  log(on ? `[신고] 개념 카드 '${CARDS[item].title}'를 신고했어요. 고칠 때까지 그대로 볼 수 있어요.` : `[신고] 개념 카드 '${CARDS[item].title}' 신고를 취소했어요.`, on ? 'warn' : 'dim');
+  log(on ? `[신고] 개념 카드 '${CARDS[item].title}'를 신고했어요. 고칠 때까지 그대로 볼 수 있어요. 도감(B)의 신고 목록에 모여요.` : `[신고] 개념 카드 '${CARDS[item].title}' 신고를 취소했어요.`, on ? 'warn' : 'dim');
   // 읽던 자리를 두고 다시 그린다. 문제 앞 카드면 초점을 '문제 풀기'로 옮겨, 이어서 누른 Enter가 신고를 되돌리지 않고 문제를 연다
   renderWin(true);
   const nb = S.run && S.run.card ? $('#nextBtn') : null;
@@ -2397,7 +2409,7 @@ function reportRun(r) {
   // 이 답으로 쓰러졌다면 되살린다: 같은 사냥터 장면을 새로 지어(FIELD.ver) 기사를 일으키고 남은 몬스터를 다시 세운다. 신고한 몬스터는 그 뒤에 뺀다
   if (revive) setScene(r.zone);
   removeMon(mkey(item), 'poof');
-  log(`[신고] '${q.name}' 문제를 신고해 모든 모드에서 뺐습니다.${f0 ? ` 이 답은 무효로 했습니다.${f0.exp ? ' 받은 경험치는 그대로 남겼습니다.' : ''}` : ''}`, 'dim');
+  log(`[신고] '${q.name}' 문제를 신고해 모든 모드에서 뺐습니다.${f0 ? ` 이 답은 무효로 했습니다.${f0.exp ? ' 받은 경험치는 그대로 남겼습니다.' : ''}` : ''} 도감(B)의 신고 목록에서 취소할 수 있어요.`, 'dim');
   renderHud(); renderQuest(); renderWin();
 }
 // 강화 시련 신고: 답한 뒤면 그 답을 무효로 하고(단계 되돌림, 맞힌 수에서 뺌, 경험치는 그대로) 시련은 다음 버튼에서 다른 문제로 그 자리를 채운다(trialNext)
@@ -2414,11 +2426,11 @@ function trialReport() {
     t.answered = true;
     if (!f0) t.picked = null;
     t.fb = Object.assign(fbNew(q, 'trial', f0 ? f0.kind : fbKind(it, 'trial', p), p, timeMs), { reported: true, exp: f0 ? f0.exp : 0, ex: f0 ? f0.ex : null });
-    log(`[신고] '${q.name}' 문제를 신고해 모든 모드에서 뺐습니다.${f0 ? ` 이 답은 무효로 했습니다.${f0.exp ? ' 받은 경험치는 그대로 남겼습니다.' : ''}` : ''}`, 'dim');
+    log(`[신고] '${q.name}' 문제를 신고해 모든 모드에서 뺐습니다.${f0 ? ` 이 답은 무효로 했습니다.${f0.exp ? ' 받은 경험치는 그대로 남겼습니다.' : ''}` : ''} 도감(B)의 신고 목록에서 취소할 수 있어요.`, 'dim');
     renderHud(); renderWin();
   });
 }
-// 신고 취소 (설정의 신고 목록에서, WS2.5). 문제가 다시 모든 모드에 나온다. 신고로 무효가 된 풀이는 그대로 무효다. 취소했으면 true
+// 신고 취소 (도감 › 신고 목록에서, logic-meta ACTS.unrep). 문제가 다시 모든 모드에 나온다. 신고로 무효가 된 풀이는 그대로 무효다. 취소했으면 true
 function unreport(qid) {
   const q = QMAP[qid], p = q && S.prog[qid];
   if (!p || !p.reported) return false;
@@ -3204,7 +3216,7 @@ function winSettle() {
 // ---------- 세세항목 도감 ----------
 // 출제기준 세세항목(ITEMS)을 과목별로 늘어놓는다. 항목마다 그 항목 문제들의 단계(칸 하나가 문제 하나), 발견(평가해 본 문제가 있음), ★ 인정(다른 판을 확신하고 맞힘).
 // 이름은 처음부터 보인다(출제 범위를 아는 것도 공부다). 보기만 하는 창이라 학습 상태를 바꾸지 않는다
-let bookZ = 's1', bookCard = null;
+let bookZ = 's1', bookCard = null, bookRep = false, unrepArm = null;
 let knownMemo = { ver: -1, set: new Set() };
 function knownItems() {
   if (knownMemo.ver === STORE.ver()) return knownMemo.set;
@@ -3217,10 +3229,11 @@ function knownItems() {
   return set;
 }
 function winBook() {
-  // 개념 카드 다시 보기 (세세항목 줄의 '개념' 버튼)
+  // 개념 카드 다시 보기 (세세항목 줄의 '개념' 버튼, 신고 목록의 '보기')
   if (bookCard && CARDS[bookCard]) {
-    return { title: '세세항목 도감', close: true, body: `${cardHtml(CARDS[bookCard], bookCard)}<div class="actions"><button class="btn" data-act="card" data-v="">도감으로</button>${cardRptBtn(bookCard)}${closeBtn}</div>` };
+    return { title: '세세항목 도감', close: true, body: `${cardHtml(CARDS[bookCard], bookCard)}<div class="actions"><button class="btn" data-act="card" data-v="">${bookRep ? '신고 목록으로' : '도감으로'}</button>${cardRptBtn(bookCard)}${closeBtn}</div>` };
   }
+  if (bookRep) return winReports();
   const known = knownItems(), byItem = new Map();
   Q.forEach((q) => { if (!byItem.has(q.item)) byItem.set(q.item, []); byItem.get(q.item).push(q); });
   const tally = (z) => {
@@ -3244,11 +3257,41 @@ function winBook() {
     <div class="kvs bk-kvs"><div class="kv"><span>발견</span><b>${t.seen} / ${t.n}</b></div><div class="kv"><span>★ 인정</span><b>${t.star}</b></div><div class="kv"><span>출제 범위</span><b>${Math.round((100 * t.seen) / t.n)}%</b></div></div>
     <div class="bk-list">${rows}</div>
     <p class="note">칸 하나가 문제 하나예요. 색이 진할수록 숙련 단계가 높아요. ★은 숫자나 묻는 말이 바뀐 판을 확신하고 맞힌 세세항목이에요.</p>
-    <div class="actions">${closeBtn}</div>` };
+    <div class="actions"><button class="btn" data-act="bookrep" title="신고한 문제와 개념 카드를 모아 보고 취소해요">신고 목록${repCount() ? ` <b class="rp-n">${repCount()}</b>` : ''}</button>${closeBtn}</div>` };
+}
+// 신고 목록 (도감 › 신고 목록): 신고한 문제(LOG.reported)와 개념 카드(S.cardRep)를 모아 보고 취소한다.
+// 문제 신고 취소는 그 문제를 다시 만나야 신고할 수 있어 두 번 눌러야 한다(unrepArm). 카드는 '보기'에서 다시 신고할 수 있어 한 번에
+const repCount = () => LOG.reported().length + Object.keys(S.cardRep || {}).filter((k) => CARDS[k]).length;
+function winReports() {
+  const itemName = (id) => { const it = ITEMS.find((x) => x.id === id); return it ? it.name : id; };
+  const qs = LOG.reported().map((r) => ({ r, q: QMAP[r.id] })).filter((x) => x.q);
+  const cs = Object.entries(S.cardRep || {}).filter(([k]) => CARDS[k]);
+  const when = (d) => (d ? `${d} 신고` : '신고');
+  const qrows = qs.map(({ r, q }) => {
+    const arm = unrepArm === q.id;
+    return `<div class="rp-row"><div class="rp-main"><b>${esc(qName(q))}</b><small>${esc(ZONES[q.z] ? ZONES[q.z].subject : '')} · ${esc(itemName(q.item))} · ${when(r.day)}</small><p class="rp-q">${tset(q.q)}</p></div>
+      <button class="btn${arm ? ' arm' : ''}" data-act="unrep" data-v="${q.id}" title="취소하면 이 문제가 다시 모든 모드에 나와요">${arm ? '한 번 더 누르면 취소' : '신고 취소'}</button></div>`;
+  }).join('');
+  const crows = cs.map(([k, d]) => `<div class="rp-row"><div class="rp-main"><b>${esc(CARDS[k].title)}</b><small>개념 카드 · ${esc(itemName(k))} · ${when(d)}</small></div>
+      <span class="rp-btns"><button class="btn" data-act="card" data-v="${k}">보기</button><button class="btn" data-act="cardrpt" data-v="${k}">신고 취소</button></span></div>`).join('');
+  const empty = !qs.length && !cs.length;
+  return { title: '신고 목록', close: true, body: `
+    ${empty ? '<p class="say rp-empty">신고한 문제나 개념 카드가 없어요. 문제 창의 \'신고\'나 개념 카드의 \'카드 신고\'를 누르면 여기에 모여요.</p>' : ''}
+    ${qs.length ? `<h3>문제 ${qs.length}</h3><div class="rp-list">${qrows}</div><p class="note">신고한 문제는 모든 모드에서 빠져 있어요. 취소하면 다시 나오고, 신고로 무효가 된 풀이는 그대로 무효예요.</p>` : ''}
+    ${cs.length ? `<h3>개념 카드 ${cs.length}</h3><div class="rp-list">${crows}</div><p class="note">신고한 카드도 그대로 볼 수 있어요. 고친 뒤 신고를 취소해 주세요.</p>` : ''}
+    <div class="actions"><button class="btn" data-act="bookrep">도감으로</button>${closeBtn}</div>` };
 }
 // 마을 창(장비·도감) 열고 닫기. 버튼과 단축키(I·B)가 같이 쓴다
 function togglePanel(name) { if (S.screen === 'town' && !S.trial) { S.panel = S.panel === name ? null : name; S.npc = null; FIELD.focus = null; renderQuest(); renderWin(); } }
-ACTS.book = () => { bookCard = null; togglePanel('book'); };
+ACTS.book = () => { bookCard = null; bookRep = false; unrepArm = null; togglePanel('book'); };
+ACTS.bookrep = () => { bookRep = !bookRep; bookCard = null; unrepArm = null; renderWin(); };
+ACTS.unrep = (b) => {
+  const id = b.dataset.v, q = QMAP[id];
+  if (!q) return;
+  if (unrepArm !== id) { unrepArm = id; renderWin(true); return; }
+  unrepArm = null;
+  if (unreport(id)) log(`[신고] '${qName(q)}' 신고를 취소했어요. 다시 모든 모드에 나와요.`, 'dim');
+};
 ACTS.card = (b) => { const v = b.dataset.v; bookCard = v && CARDS[v] ? v : null; renderWin(); };
 ACTS.bookz = (b) => { if (ZONES[b.dataset.v]) { bookZ = b.dataset.v; renderWin(); } };
 // ---------- 버튼 동작: 문제 사이 창 ----------
@@ -4145,7 +4188,7 @@ document.addEventListener('keydown', (e) => {
   } else if (S.screen === 'town') {
     if (e.key === 'Escape') closeWin();
     else if (code === 'KeyI' || e.key === 'i' || e.key === 'I') togglePanel('gear');
-    else if (code === 'KeyB' || e.key === 'b' || e.key === 'B') { bookCard = null; togglePanel('book'); }
+    else if (code === 'KeyB' || e.key === 'b' || e.key === 'B') { ACTS.book(); }
   }
 });
 
