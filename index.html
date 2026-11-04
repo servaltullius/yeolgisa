@@ -9309,6 +9309,7 @@ const SPR = { on: false, tex: {}, def: {
   knight: { file: 'spr/knight.webp', rows: 7, h: 2.5, top: 2.3, aspect: 320 / 400, foot: 0.05,
     act: { run: 1, cleave: 2, rising: 2, cleave2: 2, sweep: 3, sweep2: 3, overhead: 4, leap: 4, hurt: [5, 0, 1], die: [5, 0, 3], cast: 6 } },
   golem: { file: 'spr/golem.webp', rows: 3, h: 3.3, top: 2.6, aspect: 320 / 400, foot: 0.05,
+    walk: { row: 3, frames: 4, stride: 1.2 },
     act: { 'golem.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
   slime: { file: 'spr/slime.webp', rows: 3, h: 2.2, top: 1.35, aspect: 320 / 400, foot: 0.05,
     act: { 'slime.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
@@ -9332,6 +9333,9 @@ for (const [kind, D] of Object.entries(SPR.def)) {
 }
 // 시각 t(초)와 개체 seed로 서기 줄의 칸 번호. 서기 설정이 없는 종류가 나중에 더해져도 IDLE_DEF로 돈다
 const idleCol = (I, t, seed) => I.seq[Math.floor(((t || 0) + Math.abs(seed || 0) * 7.3) / I.hold) % I.seq.length];
+// 한 바퀴(두 걸음)의 실제 이동 거리로 걷는 자세를 고른다. 느린 거닐기·비켜 서기도
+// speed 임계값 없이 움직이고, 멈추면 위상도 멈춘다. 공격·밀쳐짐은 이 거리에 넣지 않는다.
+const walkPhase = (phase, distance, stride) => (phase + Math.max(0, distance || 0) / stride) % 1;
 // 좌우 뒤집기(판 scale.x): 화면 오른쪽을 보면 -1. 처음엔 부호대로, 그 뒤로는 ±SPR_FLIP을 넘을 때만 바꾸고 띠 안에서는 직전 값을 쥔다 (sprPose)
 const SPR_FLIP = 0.2, sprFlip = (prev, side) => (prev === undefined ? (side > 0 ? -1 : 1) : side > SPR_FLIP ? -1 : side < -SPR_FLIP ? 1 : prev);
 // 게시본은 늘 생성 스프라이트를 쓴다. 로컬 사본(DEV)은 확인 스크립트가 3D 기사의 칼끝을 재므로 주소에 ?spr가 있을 때만
@@ -9342,7 +9346,7 @@ const SPR_LOAD = SPR_WANT
   ? Promise.all(Object.entries(SPR.def).map(([k, d]) => new THREE.TextureLoader().loadAsync(ASSET_BASE + d.file).then((tx) => {
     tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = maxAniso; tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping; ASSET_TEX.add(tx);
     d.cols = Math.max(1, Math.round(tx.image.width / 320));
-    if (k === 'knight') d.rows = Math.round(tx.image.height / 400);
+    if (k === 'knight' || k === 'golem') d.rows = Math.round(tx.image.height / 400);
     SPR.tex[k] = tx;
   }, () => {}))).then(() => { if (!SKIN.done && Object.keys(SPR.tex).length) SPR.on = true; })
   : Promise.resolve();
@@ -9441,6 +9445,9 @@ function sprPose(c, d, t) {
     }
   } else if (c.dead && D.act.die) {
     const dd = D.act.die; row = dd[0]; col = dd[2];
+  } else if (D.walk && D.rows > D.walk.row && D.cols === 8 && c.travel > 1e-7) {
+    R.walkPhase = walkPhase(R.walkPhase || 0, c.travel, D.walk.stride);
+    row = D.walk.row; col = Math.floor(R.walkPhase * D.walk.frames);
   } else if ((c.speed || 0) > 0.15 && D.act.run !== undefined) {
     c.phase += d * Math.PI * 2 * 1.5 * Math.min(1.3, c.speed);
     row = D.act.run; col = Math.floor(c.phase / (Math.PI / 2)) % 4;
@@ -11801,6 +11808,9 @@ function dieStart(e, how, q) {
     cue('flee');
     // 피하던 움직임은 버리고 도망 방향으로 간다
     e.rx = null;
+    // 빠르게 다음 문제로 넘겨 반격 자세가 남아 있어도 곧바로 걷는다.
+    // play가 남은 타격 콜백을 마친 뒤 자세를 바꾸므로 전투 판정은 버리지 않는다.
+    if (e.model === 'golem' && e.ch.rig.spr) e.ch.play('run', 0.9);
     if (player) { const dx = e.sx - player.sx, dy = e.sy - player.sy, d = Math.hypot(dx, dy) || 1; e.fleeDir = [dx / d, dy / d]; } else e.fleeDir = [1, 0];
     faceToward(e, e.fleeDir[0], e.fleeDir[1]);
   }
@@ -11841,7 +11851,11 @@ function updateDying(e, dt) {
     if (u >= 1) removeEnt(e);
   } else if (e.how === 'flee') {
     const u = Math.min(1, e.dieT / 0.9);
-    e.sx += e.fleeDir[0] * dt * 8; e.sy += e.fleeDir[1] * dt * 8;
+    // 무거운 골렘이 같은 보폭으로 초당 여덟 칸을 미끄러져 나가지 않게 한다.
+    // 퇴장 시간·규칙은 그대로 두고 화면에서 달아나는 거리만 줄인다.
+    const travel = dt * (e.model === 'golem' && e.ch.rig.spr ? 2.4 : 8);
+    e.sx += e.fleeDir[0] * travel; e.sy += e.fleeDir[1] * travel;
+    e.ch.travel = travel * Math.hypot(e.fleeDir[0], e.fleeDir[1]);
     e.ch.speed = 1;
     setW(r, e.sx, e.sy);
     if (u > 0.35) e.ch.setDissolve((u - 0.35) / 0.65, DIS_EDGE.flee, 'flee');
@@ -12852,7 +12866,9 @@ let MONS = [];
 
 // ---------- 몬스터 ----------
 function updateMonster(e, dt) {
+  e.ch.travel = 0;
   if (e.dying) { updateDying(e, dt); return; }
+  const startX = e.sx, startY = e.sy;
   if (e.pendingKill) { e.pkT = (e.pkT || 0) + dt; if (e.pkT > 2.5 && !(PL.pend && PL.pend.key === e.key)) { dieStart(e, 'die'); return; } }
   if (e.spawnT < 1) {
     e.spawnT = Math.min(1, e.spawnT + dt * 3.2);
@@ -12885,6 +12901,9 @@ function updateMonster(e, dt) {
   e.ch.speed = lerp(e.ch.speed, moving ? 0.45 * CALM.k : 0, Math.min(1, dt * 6));
   // 다른 몬스터와 겹치지 않게 비켜 선다 (상대 중인 몬스터는 기사가 맞춰 서 있으니 움직이지 않고, 둘레의 몬스터가 비킨다)
   if (!isT && !e.engaged) monSep(e, MONS, dt);
+  e.ch.travel = Math.hypot(e.sx - startX, e.sy - startY);
+  // 골렘이 비켜 설 때도 발을 옮기는 쪽을 본다. 전투 중 밀쳐짐은 별도 연출이다.
+  if (e.model === 'golem' && e.ch.travel > 1e-7 && !e.ch.act) faceToward(e, e.sx - startX, e.sy - startY);
   setW(e.ch.root, e.sx, e.sy);
   if (e.ch.rig.fx) e.ch.rig.fx(dt, e.ch.root.position, e.ch.root);
   // 판 끝에 돌아온 교정 몬스터는 발밑에 붉은 기운이 피어오른다

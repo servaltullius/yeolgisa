@@ -25,6 +25,8 @@
 
 기사·골렘·슬라임·박쥐·문지기의 `spr/` 동작 시트는 사용자가 GPT 앱·Codex 이미지 생성으로 이 게임을 위해 새로 그린 원본(자산원본/생성/, git 밖)을 `tools/sprsheet.py`로 손질한 것이다. 프롬프트는 자산원본/생성-프롬프트.md.
 
+2026-11-04 골렘 걷기: 기존 골렘을 참조해 Codex 이미지 생성으로 앞·뒷모습을 추가했다. 각 방향 네 자세가 `spr/golem.webp`의 넷째 줄에 있다. 원본 `walk-cycle.png`, `walk-study.png`와 정렬본 `golem-walk.png`는 자산원본/생성/golem/에 보관하며 `tools/golem-walk.py`로 재현한다.
+
 `spr/town_basin.webp`(석조 수반)과 `tex/town_plaza.webp`(광장 판석)는 Codex에서 생성한 마을 전용 그림이다. 원본 PNG는 자산원본/생성/town/에 보관한다.
 
 기사와 몬스터 네 종은 각 동작의 앞·뒤 4칸을 한 줄에 담았다. 마을 사람 여덟 명의 `spr/npc_*.webp`는 자산원본/생성/npc/의 원본을 같은 도구로 변환했다. 대장장이의 게임용 망치질 그림에는 마을에 이미 놓인 모루를 그려 넣지 않았다.
