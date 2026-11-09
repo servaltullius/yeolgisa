@@ -7563,14 +7563,18 @@ const capsule = (r, len) => geo(`cap${r}:${len}`, () => new THREE.CapsuleGeometr
 const sphere = (r, w = 18, h = 14) => geo(`sph${r}:${w}`, () => new THREE.SphereGeometry(r, w, h));
 const cyl = (rt, rb, h, s = 14, open = false) => geo(`cyl${rt}:${rb}:${h}:${s}:${open}`, () => new THREE.CylinderGeometry(rt, rb, h, s, 1, open));
 const box = (x, y, z) => geo(`box${x}:${y}:${z}`, () => new THREE.BoxGeometry(x, y, z));
-function rockGeo(r, seed, detail = 0) {
-  return geo(`rock${r}:${seed}:${detail}`, () => {
-    const g = new THREE.DodecahedronGeometry(r, detail), p = g.attributes.position;
+function rockGeo(r, seed, detail = 1) {
+  const d = Math.max(1, detail);
+  return geo(`rock${r}:${seed}:${d}`, () => {
+    const g = new THREE.DodecahedronGeometry(r, d), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-      const h = hash2(Math.round(x * 100), Math.round(y * 100) + Math.round(z * 100) * 7, seed);
-      const k = 1 + (h - 0.5) * 0.32;
-      p.setXYZ(i, x * k, y * k, z * k);
+      const h1 = hash2(Math.round(x * 100), Math.round(y * 100) + Math.round(z * 100) * 7, seed);
+      const h2 = hash2(Math.round(z * 170), Math.round(x * 170) - Math.round(y * 130) * 5, seed + 13);
+      // 층리와 모서리 각을 살려 12면체 티가 나지 않는 자연스러운 바위 덩어리로 깎는다
+      const crag = 1 + (h1 - 0.5) * 0.34 + (h2 - 0.5) * 0.14;
+      const terrace = 1 - Math.abs(y / (r || 1)) * 0.08;
+      p.setXYZ(i, x * crag, y * crag * terrace, z * crag);
     }
     g.computeVertexNormals();
     return g;
@@ -7579,9 +7583,9 @@ function rockGeo(r, seed, detail = 0) {
 function bladeGeo(len, w) {
   return geo(`blade${len}:${w}`, () => {
     const s = new THREE.Shape();
-    s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w * 0.4, len * 0.84); s.lineTo(0, len); s.lineTo(-w * 0.4, len * 0.84); s.closePath();
-    const g = new THREE.ExtrudeGeometry(s, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.009, bevelSize: 0.008, bevelSegments: 1 });
-    g.translate(0, 0, -0.006);
+    s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w * 0.42, len * 0.82); s.lineTo(0, len); s.lineTo(-w * 0.42, len * 0.82); s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.014, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.009, bevelSegments: 2 });
+    g.translate(0, 0, -0.007);
     return g;
   });
 }
@@ -7594,12 +7598,17 @@ const crysM = (color, k = 0.55) => stdM(new THREE.Color(color).multiplyScalar(0.
 
 function makeSword(m, len = 0.86) {
   const g = new THREE.Group();
-  part(bladeGeo(len, 0.075), m.blade, g, 0, 0.12, 0);
-  part(box(0.25, 0.035, 0.05), m.gold, g, 0, 0.11, 0);
-  part(sphere(0.026, 10, 8), m.gold, g, 0.13, 0.11, 0);
-  part(sphere(0.026, 10, 8), m.gold, g, -0.13, 0.11, 0);
-  part(cyl(0.021, 0.023, 0.16, 8), m.leather, g, 0, 0.02, 0);
-  part(sphere(0.034, 10, 8), m.gold, g, 0, -0.07, 0);
+  part(bladeGeo(len, 0.076), m.blade, g, 0, 0.12, 0);
+  // 칼날 중앙 혈조(fuller)와 코등이(crossguard) 장식
+  part(box(0.018, len * 0.68, 0.022), m.gold, g, 0, 0.12 + len * 0.36, 0);
+  part(box(0.26, 0.036, 0.052), m.gold, g, 0, 0.11, 0);
+  part(box(0.07, 0.052, 0.058), m.gold, g, 0, 0.115, 0);
+  part(sphere(0.028, 12, 10), m.gold, g, 0.135, 0.11, 0);
+  part(sphere(0.028, 12, 10), m.gold, g, -0.135, 0.11, 0);
+  part(cyl(0.022, 0.024, 0.16, 10), m.leather, g, 0, 0.02, 0);
+  part(cyl(0.025, 0.025, 0.018, 10), m.gold, g, 0, 0.02, 0);
+  part(cyl(0.036, 0.036, 0.024, 12), m.gold, g, 0, -0.07, 0).rotation.x = Math.PI / 2;
+  part(sphere(0.024, 10, 8), m.gold, g, 0, -0.07, 0);
   const gm = glowMat(0x66aaff, 2.2, 0.0);
   gm.transparent = true;
   const glow = new THREE.Mesh(bladeGeo(len + 0.06, 0.14), gm);
@@ -8028,22 +8037,27 @@ function buildBat(zc, fix) {
   part(sphere(0.22, 18, 14), R.mats.fur, R.body, 0, 0, 0).scale.set(1, 1.05, 1.15);
   const head = grp(R.body, 0, 0.2, 0.16);
   part(sphere(0.165, 16, 12), R.mats.fur, head, 0, 0, 0);
+  part(sphere(0.075, 10, 8), R.mats.fur, head, 0, -0.02, 0.14).scale.set(1.1, 0.8, 1.1);
   [-1, 1].forEach((s) => {
-    part(geo('ear', () => new THREE.ConeGeometry(0.06, 0.2, 8)), R.mats.fur, head, s * 0.085, 0.17, -0.02).rotation.z = -s * 0.25;
-    part(sphere(0.032, 8, 6), R.mats.eye, head, s * 0.065, 0.03, 0.14);
-    part(geo('fang', () => new THREE.ConeGeometry(0.018, 0.07, 6)), R.mats.tooth, head, s * 0.035, -0.09, 0.13).rotation.x = Math.PI;
+    part(geo('ear', () => new THREE.ConeGeometry(0.065, 0.24, 10)), R.mats.fur, head, s * 0.09, 0.18, -0.02).rotation.z = -s * 0.28;
+    part(sphere(0.034, 10, 8), R.mats.eye, head, s * 0.065, 0.035, 0.14);
+    part(geo('fang', () => new THREE.ConeGeometry(0.018, 0.075, 8)), R.mats.tooth, head, s * 0.038, -0.09, 0.14).rotation.x = Math.PI;
   });
   const ws = new THREE.Shape();
   ws.moveTo(0, 0.05); ws.lineTo(0.18, 0.14); ws.lineTo(0.55, 0.2); ws.lineTo(0.9, 0.06);
   ws.quadraticCurveTo(0.74, -0.04, 0.66, -0.2); ws.quadraticCurveTo(0.54, -0.08, 0.44, -0.22); ws.quadraticCurveTo(0.32, -0.08, 0.2, -0.17); ws.lineTo(0, -0.05);
-  const wg = geo('wing', () => { const g = new THREE.ShapeGeometry(ws, 8); g.rotateX(Math.PI / 2); return g; });
+  const wg = geo('wing', () => { const g = new THREE.ShapeGeometry(ws, 10); g.rotateX(Math.PI / 2); return g; });
   ['L', 'R'].forEach((side) => {
     const s = side === 'L' ? -1 : 1;
     const piv = grp(R.body, s * 0.14, 0.06, 0);
     const w = part(wg, R.mats.mem, piv, 0, 0, 0);
     w.scale.x = s;
-    const bone = part(cyl(0.012, 0.012, 0.9, 5), R.mats.fur, piv, s * 0.45, 0.01, -0.07);
+    const bone = part(cyl(0.014, 0.018, 0.9, 6), R.mats.fur, piv, s * 0.45, 0.01, -0.07);
     bone.rotation.z = Math.PI / 2;
+    [0.24, 0.46, 0.66].forEach((bx, bi) => {
+      const rib = part(cyl(0.008, 0.012, 0.34 - bi * 0.04, 5), R.mats.fur, piv, s * bx, 0.008, 0.04);
+      rib.rotation.x = Math.PI / 2; rib.rotation.z = -s * (0.15 + bi * 0.12);
+    });
     R[`wing${side}`] = piv;
   });
   R.height = 1.85;
@@ -9630,19 +9644,19 @@ function skinMonColor(kind, m, zc, fix) {
   if (!c) return;
   const n = m.name || '';
   if (kind === 'slime') {
-    if (/Main/.test(n)) { m.color.copy(c).lerp(new THREE.Color(1, 1, 1), 0.15); m.emissive = c.clone().multiplyScalar(0.18); m.roughness = 0.3; }
-    else if (/Secondary/.test(n)) m.color.copy(c).multiplyScalar(0.55);
+    if (/Main/.test(n)) { m.color.copy(c).lerp(new THREE.Color(1, 1, 1), 0.15); m.emissive = c.clone().multiplyScalar(0.22); m.roughness = 0.22; m.metalness = 0.08; }
+    else if (/Secondary/.test(n)) { m.color.copy(c).multiplyScalar(0.55); m.roughness = 0.35; }
   } else if (kind === 'bat') {
-    if (/Main/.test(n)) m.color.copy(new THREE.Color(0x2a2232)).lerp(c, 0.35);
-    else if (/Belly/.test(n)) m.color.copy(c).multiplyScalar(0.6);
-    else if (/Eyes/.test(n)) { m.emissive = c.clone().multiplyScalar(1.6); }
+    if (/Main/.test(n)) { m.color.copy(new THREE.Color(0x2a2232)).lerp(c, 0.35); m.roughness = 0.65; }
+    else if (/Belly/.test(n)) { m.color.copy(c).multiplyScalar(0.6); m.roughness = 0.55; }
+    else if (/Eyes/.test(n)) { m.emissive = c.clone().multiplyScalar(1.8); }
   } else if (kind === 'golem') {
-    if (/Main/.test(n)) { m.color.set(0x6e6a72).lerp(c, 0.18); m.roughness = 0.85; m.flatShading = true; }
-    else if (/Secondary/.test(n)) { m.color.set(0x45424a).lerp(c, 0.12); m.roughness = 0.9; m.flatShading = true; }
-    else if (/Gold|Eye_White/.test(n)) { m.color.copy(c); m.emissive = c.clone().multiplyScalar(2.2); }
+    if (/Main/.test(n)) { m.color.set(0x6e6a72).lerp(c, 0.18); m.roughness = 0.78; m.metalness = 0.15; m.flatShading = true; }
+    else if (/Secondary/.test(n)) { m.color.set(0x45424a).lerp(c, 0.12); m.roughness = 0.85; m.metalness = 0.2; m.flatShading = true; }
+    else if (/Gold|Eye_White/.test(n)) { m.color.copy(c); m.emissive = c.clone().multiplyScalar(2.4); }
   } else if (kind === 'guard') {
-    if (/Glow/.test(n)) { m.color.copy(c); m.emissive = c.clone().multiplyScalar(2.5); }
-    else m.color.lerp(c, 0.12);
+    if (/Glow/.test(n)) { m.color.copy(c); m.emissive = c.clone().multiplyScalar(2.6); }
+    else { m.color.lerp(c, 0.12); m.roughness = 0.42; m.metalness = 0.65; }
   }
 }
 // 버리는 개체의 재질: 같은 열쇠(종류·메시·순번)의 재질을 아직 쥐고 있지 않으면 쥐고 true (disposeObj가 버리지 않는다)
@@ -10521,7 +10535,7 @@ function arenaDetail(W) {
 // 장소 재질의 셰이더 갈래 (WARM). 장소 코드에 새 갈래(맵 조합, 양면, 반투명, 인스턴스 …)를 더하면 여기에도 더한다. checks/t-r-warm.js가 빠진 갈래를 찾아 준다
 // 바닥·벽(map nrm, 발광 emi), 단색 소품, 물(nrm tr), 문자판·석비(map), 낱장(map ds), 깃발(map ds tr at), 결정·바위(flat), 룬 고리·소용돌이(basic add),
 // 바닥 안개(basic map tr, 보통·높음에서만 보인다), 성벽 총안(inst), 꽃(inst icol), 별(points), 풀(바람 셰이더, inst icol)
-WARM.add(['std', 'std ds', 'std tr', 'std flat', 'std map', 'std map ds', 'std map ds tr at', 'std map emi ds at', 'std map nrm', 'std map nrm ds', 'std map nrm inst', 'std map nrm emi', 'std map nrm rgh', 'std map nrm rgh ds', 'std map nrm rgh inst', 'std map nrm rgh mtl', 'std nrm emi', 'std nrm tr', 'std inst icol',
+WARM.add(['std', 'std ds', 'std tr', 'std flat', 'std nrm', 'std map', 'std map ds', 'std map ds tr at', 'std map emi ds at', 'std map nrm', 'std map nrm ds', 'std map nrm inst', 'std map nrm emi', 'std map rgh', 'std map nrm rgh', 'std map nrm rgh ds', 'std map nrm rgh inst', 'std map nrm rgh mtl', 'std nrm emi', 'std nrm tr', 'std inst icol',
   'basic', 'basic map tr', 'basic map tr add', 'basic tr add', 'points']);
 // 싸움터 바닥 디테일 (arenaDetail): 판마다 색·세기를 RGBA 정점 색에 담은 얼룩 덩어리와 웅덩이. 정점 색에 투명도가 있으면 셰이더 갈래가 달라서
 // 갈래 글자('vc')의 대역 도형(정점 색 없음)으로는 맞지 않는다. RGBA 정점 색을 가진 도형으로 따로 만든다
@@ -10537,15 +10551,18 @@ WARM.add(() => { const o = new THREE.Mesh(WARM_GEO, new THREE.MeshDepthMaterial(
 
 // 재질 모음 (장소마다 새로 만든다)
 function matKit() {
-  return {
-    stone: texMatR('brick', 256, [1.2, 1.2], { roughness: 0.92 }, { seed: 3, a: [118, 110, 98], b: [158, 150, 136] }),
-    stoneDark: texMatR('brick', 256, [1.4, 1.4], { roughness: 0.95 }, { seed: 4, a: [70, 66, 60], b: [104, 98, 88] }),
-    plaster: texMatR('plaster', 256, [1, 1], { roughness: 0.95 }),
-    wood: texMatR('wood', 256, [1, 1], { roughness: 0.8 }),
-    bark: texMatR('bark', 128, [1, 2], { roughness: 0.95 }),
-    iron: stdM(0x34383e, 0.45, 0.8),
-    gold: stdM(0xc9a24c, 0.3, 1),
-  };
+  const stone = texMatR('brick', 256, [1.2, 1.2], { roughness: 0.92 }, { seed: 3, a: [118, 110, 98], b: [158, 150, 136] });
+  const stoneDark = texMatR('brick', 256, [1.4, 1.4], { roughness: 0.95 }, { seed: 4, a: [70, 66, 60], b: [104, 98, 88] });
+  const plaster = texMatR('plaster', 256, [1, 1], { roughness: 0.95 });
+  const wood = texMatR('wood', 256, [1, 1], { roughness: 0.8 });
+  const bark = texMatR('bark', 128, [1, 2], { roughness: 0.95 });
+  const iron = stdM(0x34383e, 0.45, 0.8);
+  const gold = stdM(0xc9a24c, 0.32, 0.92);
+  surfUpgrade(stone, 'blocks', 1.2, 1.2, { tint: 0xa8a094 });
+  surfUpgrade(stoneDark, 'dbrick', 1.4, 1.4, { tint: 0x8a8278 });
+  surfUpgrade(wood, 'planks', 1, 1, { tint: 0xa89278 });
+  surfUpgrade(iron, 'rusty', 1, 1, { tint: 0x686c74, metal: true });
+  return { stone, stoneDark, plaster, wood, bark, iron, gold };
 }
 function crate(W, K, sx, sy, s = 0.7, rot = 0) {
   const kind = (Math.round(sx * 7 + sy * 13) & 1) ? 'ph:old_military_crate' : 'ph:wooden_crate_02';
@@ -10668,7 +10685,10 @@ function brazier(W, K, sx, sy, s = 1, col) {
       K.brazierBase = stdM(0x968b7a, 0.95);
       surfUpgrade(K.brazierBase, 'blocks', 1, 1, { tint: 0x9e9382 });
     }
-    part(cyl(0.38 * s, 0.45 * s, 0.95 * s, 8), K.brazierBase, g, 0, 0.475 * s, 0);
+    part(cyl(0.52 * s, 0.56 * s, 0.18 * s, 8), K.brazierBase, g, 0, 0.09 * s, 0);
+    part(cyl(0.32 * s, 0.40 * s, 0.60 * s, 12), K.brazierBase, g, 0, 0.48 * s, 0);
+    part(geo(`brz-ring:${s}`, () => new THREE.TorusGeometry(0.35 * s, 0.03 * s, 6, 16)), K.iron, g, 0, 0.76 * s, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.46 * s, 0.34 * s, 0.19 * s, 12), K.brazierBase, g, 0, 0.875 * s, 0);
     const coal = emit(W, emiM(col || 0xa7471b, 0.9, 0x30261e), 'src');
     assetPack('s2lava', PACK_S2.lava).then(t => {
       if (t) assetUpgrade(coal, { map: t.map, emissiveMap: t.emi, normalMap: t.normalMap, color: 0xadaa9d, emissive: col || 0xffa354, roughness: 0.93 });
@@ -10679,9 +10699,10 @@ function brazier(W, K, sx, sy, s = 1, col) {
       ember.scale.set(0.13 * s, 0.06 * s, 0.09 * s); ember.rotation.y = a;
     }
   } else {
-    part(cyl(0.12 * s, 0.2 * s, 1.0 * s, 8), K.iron, g, 0, 0.5 * s, 0);
-    part(geo(`bowl${s}`, () => new THREE.CylinderGeometry(0.42 * s, 0.22 * s, 0.3 * s, 12, 1, true)), K.iron, g, 0, 1.12 * s, 0).material.side = THREE.DoubleSide;
-    part(cyl(0.36 * s, 0.36 * s, 0.05, 12), emit(W, emiM(col || 0xff7a20, 3, 0x200800), 'src'), g, 0, 1.18 * s, 0);
+    part(cyl(0.28 * s, 0.34 * s, 0.14 * s, 8), K.iron, g, 0, 0.07 * s, 0);
+    part(cyl(0.12 * s, 0.2 * s, 0.92 * s, 10), K.iron, g, 0, 0.54 * s, 0);
+    part(geo(`bowl${s}`, () => new THREE.CylinderGeometry(0.42 * s, 0.22 * s, 0.3 * s, 14, 1, true)), K.iron, g, 0, 1.12 * s, 0).material.side = THREE.DoubleSide;
+    part(cyl(0.36 * s, 0.36 * s, 0.05, 14), emit(W, emiM(col || 0xff7a20, 3, 0x200800), 'src'), g, 0, 1.18 * s, 0);
   }
   fire(W, w2(sx, sy, 1.22 * s), s * 0.9);
   addObs(W, sx, sy, 0.5 * s);
@@ -10725,33 +10746,44 @@ function lamp(W, K, sx, sy, light) {
 function house(W, K, sx, sy, o = {}) {
   const g = sg(W, sx, sy, o.rot || 0);
   const w = o.w || 4, d = o.d || 3.4, h = o.h || 2.6;
-  part(box(w + 0.3, 0.45, d + 0.3), K.stoneDark, g, 0, 0.22, 0);
+  part(box(w + 0.36, 0.22, d + 0.36), K.stoneDark, g, 0, 0.11, 0);
+  part(box(w + 0.24, 0.32, d + 0.24), K.stone, g, 0, 0.34, 0);
   part(box(w, h, d), K.plaster, g, 0, 0.45 + h / 2, 0);
   const beam = stdM(0x3e2614, 0.85);
   surfUpgrade(beam, 'planks', 0.3, 2, { tint: 0x6a5a4a });
-  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => part(box(0.16, h, 0.16), beam, g, a * (w / 2), 0.45 + h / 2, b * (d / 2)));
-  [0.45 + h * 0.5, 0.45 + h - 0.06].forEach((y) => { part(box(w + 0.05, 0.13, 0.12), beam, g, 0, y, d / 2 + 0.01); part(box(0.12, 0.13, d + 0.05), beam, g, w / 2 + 0.01, y, 0); part(box(0.12, 0.13, d + 0.05), beam, g, -w / 2 - 0.01, y, 0); });
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => part(box(0.18, h + 0.04, 0.18), beam, g, a * (w / 2), 0.45 + h / 2, b * (d / 2)));
+  [0.45 + h * 0.5, 0.45 + h - 0.06].forEach((y) => { part(box(w + 0.08, 0.14, 0.14), beam, g, 0, y, d / 2 + 0.01); part(box(0.14, 0.14, d + 0.08), beam, g, w / 2 + 0.01, y, 0); part(box(0.14, 0.14, d + 0.08), beam, g, -w / 2 - 0.01, y, 0); });
   part(box(0.12, h * 0.5, 0.1), beam, g, -w * 0.25, 0.45 + h * 0.25, d / 2 + 0.02).rotation.z = 0.6;
-  const rs = new THREE.Shape(), rw = w / 2 + 0.45, rh = o.rh || 1.7;
+  part(box(0.12, h * 0.5, 0.1), beam, g, w * 0.25, 0.45 + h * 0.25, d / 2 + 0.02).rotation.z = -0.6;
+  const rs = new THREE.Shape(), rw = w / 2 + 0.48, rh = o.rh || 1.75;
   rs.moveTo(-rw, 0); rs.lineTo(rw, 0); rs.lineTo(0, rh); rs.closePath();
-  const rg = new THREE.ExtrudeGeometry(rs, { depth: d + 0.7, bevelEnabled: false });
-  rg.translate(0, 0, -(d + 0.7) / 2);
+  const rg = new THREE.ExtrudeGeometry(rs, { depth: d + 0.72, bevelEnabled: false });
+  rg.translate(0, 0, -(d + 0.72) / 2);
   const roofM = texMatR('roof', 256, [0.42, 0.42], { roughness: 0.85 }, { seed: o.roofSeed || 1, a: o.roofA || [120, 46, 34], b: o.roofB || [168, 70, 48] });
   // 지붕: 받은 낡은 널빤지 질감을 어둡게 (색 지붕 대신 비바람에 바랜 나무 지붕)
   surfUpgrade(roofM, 'planks', 1.5, 1.5, { tint: 0x5a5048 });
   const roof = new THREE.Mesh(rg, [K.plaster, roofM]);
   roof.position.y = 0.45 + h; roof.castShadow = true; roof.receiveShadow = true;
   g.add(roof);
-  part(box(0.5, 1.5, 0.5), K.stone, g, w * 0.28, 0.45 + h + 1.0, -d * 0.18);
-  smokeStack(W, g.localToWorld(new THREE.Vector3(w * 0.28, 0.45 + h + 1.8, -d * 0.18)), 1.6, 0x77706a, 0.8);
-  part(box(0.9, 1.6, 0.08), stdM(0x4a2c16, 0.8), g, -w * 0.18, 0.45 + 0.8, d / 2 + 0.03);
-  part(sphere(0.04, 8, 6), K.gold, g, -w * 0.18 + 0.32, 0.45 + 0.8, d / 2 + 0.09);
+  // 용마루 대들보와 박공 처마 서까래
+  part(box(0.16, 0.16, d + 0.82), beam, g, 0, 0.45 + h + rh, 0);
+  part(box(0.56, 1.5, 0.56), K.stone, g, w * 0.28, 0.45 + h + 1.0, -d * 0.18);
+  part(box(0.68, 0.14, 0.68), K.stoneDark, g, w * 0.28, 0.45 + h + 1.76, -d * 0.18);
+  part(cyl(0.15, 0.18, 0.28, 10), K.stoneDark, g, w * 0.28, 0.45 + h + 1.94, -d * 0.18);
+  smokeStack(W, g.localToWorld(new THREE.Vector3(w * 0.28, 0.45 + h + 2.05, -d * 0.18)), 1.6, 0x77706a, 0.8);
+  // 문틀과 무쇠 경첩이 달린 현관문
+  part(box(1.06, 1.72, 0.12), beam, g, -w * 0.18, 0.45 + 0.86, d / 2 + 0.02);
+  part(box(0.9, 1.6, 0.08), K.wood, g, -w * 0.18, 0.45 + 0.8, d / 2 + 0.05);
+  [0.45 + 0.45, 0.45 + 1.15].forEach((hy) => part(box(0.55, 0.05, 0.03), K.iron, g, -w * 0.18 - 0.14, hy, d / 2 + 0.09));
+  part(sphere(0.04, 8, 6), K.gold, g, -w * 0.18 + 0.32, 0.45 + 0.8, d / 2 + 0.10);
   const win = emit(W, emiM(0xffc870, 1.8, 0x2a1a08));
   [[w * 0.22, d / 2 + 0.03, 0], [-w / 2 - 0.03, d * 0.1, Math.PI / 2], [w / 2 + 0.03, -d * 0.15, Math.PI / 2]].forEach(([x, z, r]) => {
     const wg = grp(g, x, 0.45 + h * 0.58, z); wg.rotation.y = r;
     part(box(0.7, 0.62, 0.05), win, wg);
-    part(box(0.8, 0.08, 0.1), beam, wg, 0, -0.35, 0.02);
+    part(box(0.84, 0.09, 0.12), beam, wg, 0, -0.35, 0.03);
+    part(box(0.82, 0.08, 0.10), beam, wg, 0, 0.34, 0.02);
     part(box(0.06, 0.62, 0.07), beam, wg, 0, 0, 0.02);
+    part(box(0.7, 0.05, 0.07), beam, wg, 0, 0.02, 0.02);
   });
   W.obstacles.push([sx, sy, Math.max(w, d) * 0.62]);
   return g;
@@ -10816,18 +10848,22 @@ function teleCircle(W, sx, sy) {
   const stoneM = stdM(0x686761, 0.96);
   surfUpgrade(stoneM, 'blocks', 1.5, 1.5, { tint: 0xb7aca0, ns: 0.55 });
   part(cyl(1.93, 2.02, 0.09, 32), stoneM, g).position.y = 0.015;
-  const brass = stdM(0x897451, 0.78, 0.22);
+  const brass = stdM(0x897451, 0.42, 0.85);
+  part(geo('tele-rim', () => new THREE.TorusGeometry(1.95, 0.045, 8, 48)), brass, g, 0, 0.06, 0).rotation.x = Math.PI / 2;
   const inlay = emit(W, new THREE.MeshBasicMaterial({
     map: runeRing('#e0dcc2', 22), color: 0xb0c9bc, transparent: true, opacity: 0.58, depthWrite: false
   }), 'ui');
   flat(W, new THREE.CircleGeometry(1.82, 48), inlay, sx, sy, 0.066);
-  const wick = emit(W, emiM(0x8ebdb4, 0.85, 0x455453), 'ui');
+  const wick = emit(W, emiM(0x8ebdb4, 0.95, 0x455453), 'ui');
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * TAU + Math.PI / 4;
     const x = Math.cos(a) * 1.94, z = Math.sin(a) * 1.94;
-    part(cyl(0.17, 0.24, 0.48, 8), stoneM, g, x, 0.24, z);
-    part(cyl(0.20, 0.16, 0.09, 8), brass, g, x, 0.49, z);
-    part(geo('tcrys', () => new THREE.OctahedronGeometry(0.145)), wick, g, x, 0.61, z);
+    part(cyl(0.28, 0.32, 0.12, 12), stoneM, g, x, 0.06, z);
+    part(cyl(0.16, 0.23, 0.46, 12), stoneM, g, x, 0.32, z);
+    part(geo('tele-collar', () => new THREE.TorusGeometry(0.18, 0.025, 6, 16)), brass, g, x, 0.52, z).rotation.x = Math.PI / 2;
+    part(cyl(0.21, 0.15, 0.09, 12), brass, g, x, 0.56, z);
+    const cr = part(geo('tcrys', () => new THREE.OctahedronGeometry(0.15)), wick, g, x, 0.72, z);
+    cr.scale.set(0.85, 1.4, 0.85);
   }
   const p = w2(sx, sy, 0.1), col = C(0x9dbeb2, 1.1);
   W.updaters.push((dt) => {
@@ -10898,63 +10934,82 @@ function buildTown() {
     const domeM = texMatR('roof', 256, [2, 1], { roughness: 0.85 }, { seed: 22, a: [42, 48, 56], b: [64, 72, 84] });
     surfUpgrade(marble, 'blocks', 1.2, 2.2, { tint: 0x948c7e });
     surfUpgrade(domeM, 'castle', 2, 1, { tint: 0x58626e });
-    part(cyl(2.05, 2.25, 0.35, 24), K.stone, g, 0, 0.17, 0);
-    part(cyl(1.72, 1.85, 0.18, 24), K.stoneDark, g, 0, 0.38, 0);
+    part(cyl(2.08, 2.28, 0.35, 24), K.stone, g, 0, 0.17, 0);
+    part(cyl(1.74, 1.88, 0.18, 24), K.stoneDark, g, 0, 0.38, 0);
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * TAU, cx = Math.cos(a) * 1.55, cz = Math.sin(a) * 1.55;
-      part(box(0.46, 0.24, 0.46), K.stoneDark, g, cx, 0.48, cz);
-      part(cyl(0.16, 0.19, 2.35, 12), marble, g, cx, 1.72, cz);
-      part(box(0.44, 0.22, 0.44), K.stoneDark, g, cx, 2.92, cz);
+      part(box(0.48, 0.24, 0.48), K.stoneDark, g, cx, 0.48, cz);
+      part(cyl(0.23, 0.26, 0.12, 12), marble, g, cx, 0.64, cz);
+      part(cyl(0.16, 0.19, 2.25, 14), marble, g, cx, 1.72, cz);
+      part(cyl(0.24, 0.18, 0.14, 12), marble, g, cx, 2.82, cz);
+      part(box(0.46, 0.22, 0.46), K.stoneDark, g, cx, 2.94, cz);
     }
     part(cyl(1.88, 1.95, 0.24, 24), marble, g, 0, 3.08, 0);
+    part(geo('shrine-ring', () => new THREE.TorusGeometry(1.92, 0.05, 8, 32)), K.gold, g, 0, 3.20, 0).rotation.x = Math.PI / 2;
     part(geo('dome', () => new THREE.SphereGeometry(1.72, 24, 12, 0, TAU, 0, Math.PI / 2)), domeM, g, 0, 3.16, 0);
-    part(cyl(0.14, 0.22, 0.45, 8), K.iron, g, 0, 4.98, 0);
-    part(box(0.75, 0.28, 0.75), K.stoneDark, g, 0, 0.52, 0);
-    part(cyl(0.32, 0.4, 0.75, 8), marble, g, 0, 0.92, 0);
+    part(cyl(0.14, 0.24, 0.48, 10), K.iron, g, 0, 4.98, 0);
+    part(sphere(0.14, 10, 8), K.gold, g, 0, 5.26, 0);
+    part(cyl(0.48, 0.56, 0.24, 8), K.stoneDark, g, 0, 0.50, 0);
+    part(cyl(0.28, 0.38, 0.66, 12), marble, g, 0, 0.90, 0);
+    part(cyl(0.44, 0.30, 0.18, 12), marble, g, 0, 1.26, 0);
     prop(W, 'ph:gothic_statue', -7.9, 9.25, { h: 1.85, y: 0.35, rot: 0 });
-    const cr = part(geo('hcrys', () => new THREE.OctahedronGeometry(0.32)), emit(W, emiM(0x9ad8ff, 3, 0x123048), 'ui'), g, 0, 1.68, 0);
+    const cr = part(geo('hcrys', () => new THREE.OctahedronGeometry(0.32)), emit(W, emiM(0x9ad8ff, 3, 0x123048), 'ui'), g, 0, 1.72, 0);
     cr.scale.y = 1.7; cr.userData.dyn = true;
     const l = pLight(W, w2(-7.9, 8.2, 1.8), 0x9ad8ff, 6, 8);
-    W.updaters.push((dt, t) => { cr.rotation.y += dt * 0.8; cr.position.y = 1.68 + Math.sin(t * 1.6) * 0.08; l.intensity = 5.5 + Math.sin(t * 2) * 0.8; });
+    W.updaters.push((dt, t) => { cr.rotation.y += dt * 0.8; cr.position.y = 1.72 + Math.sin(t * 1.6) * 0.08; l.intensity = 5.5 + Math.sin(t * 2) * 0.8; });
     const hp = w2(-7.9, 8.2, 1.6), hc = C(0x9ad8ff, 2);
     W.updaters.push((dt) => { if (Math.random() < dt * 6 * fxScale()) FX.emit(hp.x + rand(-0.4, 0.4), hp.y, hp.z + rand(-0.4, 0.4), { vy: rand(0.3, 0.6), c: hc, life: 2, s: 0.08, s1: 0 }); });
     addObs(W, -7.9, 8.2, 2.3);
   }
-  // 대장간: 화로와 모루 (오목한 석조 아궁이와 숯불, 담금질 통, 연장 상자)
+  // 대장간: 화로와 모루 (오목한 석조 아치 아궁이와 무쇠 띠 후드, 숯불, 모루, 무기 거치대)
   {
     surfUpgrade(K.stoneDark, 'dbrick', 1.4, 1.4, { tint: 0xb8a898, gain: 1.45 });
     const g = sg(W, 9.2, -1.3, -0.5);
-    // 아궁이 받침과 좌우 돌기둥, 뒷벽, 후드와 굴뚝
-    part(box(2.2, 0.55, 1.65), K.stoneDark, g, 0, 0.275, 0);
-    [-0.78, 0.78].forEach((x) => part(box(0.54, 0.85, 1.5), K.stoneDark, g, x, 0.95, -0.04));
-    part(box(1.1, 0.85, 0.45), K.stoneDark, g, 0, 0.95, -0.55);
-    part(box(1.05, 0.75, 0.9), stdM(0x0d0907, 0.98), g, 0, 0.92, -0.08);
-    part(box(2.15, 0.36, 1.58), K.stoneDark, g, 0, 1.52, -0.02);
-    part(box(1.65, 0.45, 1.25), K.stoneDark, g, 0.15, 1.9, -0.1);
-    part(box(0.95, 2.2, 0.95), K.stoneDark, g, 0.35, 3.1, -0.2);
-    part(box(1.1, 0.18, 1.1), K.iron, g, 0.35, 4.22, -0.2);
-    for (let i = -2; i <= 2; i++) part(cyl(0.025, 0.025, 0.36, 6), K.iron, g, i * 0.22, 0.68, 0.62);
-    part(box(1.12, 0.05, 0.06), K.iron, g, 0, 0.82, 0.62);
+    // 2단 석조 받침과 아치형 화구, 무쇠 보강 띠를 두른 경사 후드와 굴뚝
+    part(box(2.38, 0.20, 1.80), K.stone, g, 0, 0.10, 0);
+    part(box(2.22, 0.42, 1.66), K.stoneDark, g, 0, 0.38, 0);
+    [-0.80, 0.80].forEach((x) => {
+      part(box(0.56, 0.90, 1.52), K.stoneDark, g, x, 0.98, -0.04);
+      part(box(0.60, 0.08, 1.58), K.iron, g, x, 1.38, -0.04);
+    });
+    part(box(1.12, 0.90, 0.46), K.stoneDark, g, 0, 0.98, -0.55);
+    part(box(1.06, 0.78, 0.92), stdM(0x0d0907, 0.98), g, 0, 0.92, -0.08);
+    // 아궁이 상부 석조 아치와 무쇠 이음쇠
+    const fArch = part(geo('forge-arch', () => new THREE.CylinderGeometry(0.56, 0.56, 0.36, 16, 1, false, -Math.PI / 2, Math.PI)), K.stone, g, 0, 1.08, 0.52);
+    fArch.rotation.x = Math.PI / 2;
+    part(box(2.26, 0.14, 1.68), K.iron, g, 0, 1.46, -0.02);
+    part(box(2.14, 0.34, 1.56), K.stoneDark, g, 0, 1.68, -0.04);
+    part(box(1.76, 0.38, 1.32), K.stoneDark, g, 0.12, 2.02, -0.08);
+    part(box(1.82, 0.08, 1.38), K.iron, g, 0.12, 2.18, -0.08);
+    part(box(1.36, 0.34, 1.10), K.stoneDark, g, 0.24, 2.36, -0.14);
+    part(box(0.98, 2.0, 0.98), K.stoneDark, g, 0.35, 3.45, -0.2);
+    part(box(1.16, 0.16, 1.16), K.stone, g, 0.35, 4.38, -0.2);
+    part(box(1.12, 0.14, 1.12), K.iron, g, 0.35, 4.52, -0.2);
+    [[-0.44, -0.44], [0.44, -0.44], [-0.44, 0.44], [0.44, 0.44]].forEach(([cx, cz]) => part(cyl(0.04, 0.04, 0.32, 6), K.iron, g, 0.35 + cx, 4.72, -0.2 + cz));
+    part(box(1.20, 0.08, 1.20), K.iron, g, 0.35, 4.88, -0.2);
+    for (let i = -2; i <= 2; i++) part(cyl(0.028, 0.028, 0.38, 8), K.iron, g, i * 0.22, 0.70, 0.64);
+    part(box(1.16, 0.06, 0.07), K.iron, g, 0, 0.84, 0.64);
     const coal = emit(W, emiM(0xb84818, 1.2, 0x2a1208), 'src');
     assetPack('s2lava', PACK_S2.lava).then((t) => {
       if (t) assetUpgrade(coal, { map: t.map, emissiveMap: t.emi, normalMap: t.normalMap, color: 0xadaa9d, emissive: 0xff8a38, roughness: 0.92 });
     });
-    for (let i = 0; i < 6; i++) {
-      const rx = -0.35 + (i % 3) * 0.35, rz = 0.08 + Math.floor(i / 3) * 0.28;
-      const e = part(rockGeo(1, i), coal, g, rx, 0.64, rz);
-      e.scale.set(0.28, 0.12, 0.22); e.rotation.y = i * 1.1;
+    for (let i = 0; i < 7; i++) {
+      const rx = -0.38 + (i % 3) * 0.36, rz = 0.06 + Math.floor(i / 3) * 0.24;
+      const e = part(rockGeo(1, i), coal, g, rx, 0.65, rz);
+      e.scale.set(0.28, 0.13, 0.22); e.rotation.y = i * 1.1;
     }
     const fp = g.localToWorld(new THREE.Vector3(0, 0.82, 0.25));
     fire(W, fp, 0.65);
-    smokeStack(W, g.localToWorld(new THREE.Vector3(0.35, 4.3, -0.2)), 3, 0x4a4440, 1);
+    smokeStack(W, g.localToWorld(new THREE.Vector3(0.35, 4.92, -0.2)), 3, 0x4a4440, 1);
     pLight(W, w2(9.2, -0.3, 1.3), 0xff7a2a, 9, 9, { flicker: true });
     addObs(W, 9.2, -1.3, 1.5);
     const a = sg(W, 5.2, -3.4, -0.28);
     const cast = stdM(0x464a4e, 0.72, 0.65), face = stdM(0x6e747a, 0.44, 0.78);
     cast.normalMap = face.normalMap = texSet('hammer', 128).normalMap;
     cast.normalScale.setScalar(0.65); face.normalScale.setScalar(0.28);
-    part(cyl(0.35, 0.40, 0.48, 14), K.wood, a, 0, 0.24, 0);
-    part(cyl(0.37, 0.38, 0.055, 14), cast, a, 0, 0.29, 0);
+    part(cyl(0.36, 0.41, 0.48, 16), K.wood, a, 0, 0.24, 0);
+    [0.12, 0.38].forEach((hy) => part(geo(`anvil-hoop:${hy}`, () => new THREE.TorusGeometry(0.385 - hy * 0.06, 0.022, 6, 18)), K.iron, a, 0, hy, 0).rotation.x = Math.PI / 2);
+    part(cyl(0.37, 0.38, 0.055, 16), cast, a, 0, 0.49, 0);
     // 옆에서 보이는 주물의 잘록한 허리와 넓은 발. 망치가 닿는 윗면만 닳은 쇳빛으로 남긴다.
     const stock = geo('town-anvil-body', () => {
       const p = new THREE.Shape();
@@ -10962,21 +11017,29 @@ function buildTown() {
       p.quadraticCurveTo(0.10, 0.14, 0.14, 0.23);
       p.lineTo(0.40, 0.30); p.lineTo(0.40, 0.36); p.lineTo(-0.37, 0.36);
       p.lineTo(-0.37, 0.28); p.quadraticCurveTo(-0.06, 0.18, -0.30, 0.07); p.closePath();
-      const shape = new THREE.ExtrudeGeometry(p, { depth: 0.29, bevelThickness: 0.014, bevelSize: 0.012, bevelSegments: 1, curveSegments: 4 });
+      const shape = new THREE.ExtrudeGeometry(p, { depth: 0.29, bevelThickness: 0.018, bevelSize: 0.015, bevelSegments: 2, curveSegments: 8 });
       return shape.translate(0, 0, -0.145);
     });
     part(stock, cast, a, 0, 0.49, 0);
-    part(box(0.82, 0.055, 0.35), face, a, 0.015, 0.88, 0);
-    const horn = part(geo('town-anvil-horn', () => new THREE.ConeGeometry(0.15, 0.44, 10)), face, a, -0.57, 0.80, 0);
+    part(box(0.84, 0.06, 0.35), face, a, 0.015, 0.88, 0);
+    part(box(0.06, 0.065, 0.06), stdM(0x181a1c, 0.9), a, 0.28, 0.885, 0);
+    const horn = part(geo('town-anvil-horn', () => new THREE.ConeGeometry(0.15, 0.46, 14)), face, a, -0.58, 0.80, 0);
     horn.rotation.z = Math.PI / 2; horn.scale.x = 0.62;
     addSpot(W, 'anvil', 5.2, -3.4);
     addObs(W, 5.2, -3.4, 0.5);
     prop(W, 'ph:wooden_bucket_01', 4.35, -3.05, { h: 0.48, rot: 0.4, shadow: false });
     prop(W, 'ph:metal_tool_chest', 6.45, -2.55, { h: 0.52, rot: -0.35, obs: 0.45 });
     const rack = sg(W, 8.8, -4.6, -0.2);
-    part(box(1.6, 0.08, 0.08), K.wood, rack, 0, 1.1, 0); part(box(0.08, 1.2, 0.08), K.wood, rack, -0.75, 0.6, 0); part(box(0.08, 1.2, 0.08), K.wood, rack, 0.75, 0.6, 0);
-    const sm = { blade: stdM(0xb8c0c8, 0.32, 0.92), gold: K.gold, leather: stdM(0x3a2414, 0.85) };
-    [-0.45, 0, 0.45].forEach((x) => { const s = makeSword(sm, 0.8); s.position.set(x, 0.1, 0.06); rack.add(s); });
+    [-0.78, 0.78].forEach((rx) => {
+      part(box(0.14, 0.10, 0.64), K.wood, rack, rx, 0.05, 0);
+      part(box(0.10, 1.26, 0.10), K.wood, rack, rx, 0.65, -0.06).rotation.x = 0.08;
+      part(box(0.12, 0.08, 0.14), K.iron, rack, rx, 1.12, -0.02);
+      part(box(0.12, 0.08, 0.14), K.iron, rack, rx, 0.28, -0.09);
+    });
+    part(box(1.72, 0.10, 0.09), K.wood, rack, 0, 1.12, -0.02);
+    part(box(1.72, 0.10, 0.12), K.wood, rack, 0, 0.24, 0.02);
+    const sm = { blade: stdM(0xb8c0c8, 0.28, 0.92), gold: K.gold, leather: stdM(0x3a2414, 0.85) };
+    [-0.52, -0.17, 0.17, 0.52].forEach((x) => { const s = makeSword(sm, 0.82); s.position.set(x, 0.14, 0.06); s.rotation.x = -0.08; rack.add(s); });
     addObs(W, 8.8, -4.6, 0.9);
   }
   // 성벽과 성문
@@ -11015,14 +11078,21 @@ function buildTown() {
   // 시장 좌판 (풍화된 천막과 보급 상자·술통·양동이)
   {
     const g = sg(W, -2.6, 7.8, 0.15);
-    part(box(2.4, 0.1, 1.0), K.wood, g, 0, 0.85, 0);
-    [[-1.1, -0.45], [1.1, -0.45], [-1.1, 0.45], [1.1, 0.45]].forEach(([x, z]) => part(box(0.08, 2.0, 0.08), K.wood, g, x, 1.0, z));
+    part(box(2.44, 0.12, 1.06), K.wood, g, 0, 0.85, 0);
+    part(box(2.36, 0.08, 0.96), K.wood, g, 0, 0.25, 0);
+    [[-1.1, -0.45], [1.1, -0.45], [-1.1, 0.45], [1.1, 0.45]].forEach(([x, z]) => {
+      part(box(0.10, 2.04, 0.10), K.wood, g, x, 1.02, z);
+      part(box(0.14, 0.12, 0.14), K.iron, g, x, 0.06, z);
+    });
+    [-1.1, 1.1].forEach((x) => part(box(0.08, 0.08, 1.12), K.wood, g, x, 1.96, 0));
     const stripe = canvasTex(256, 64, (c, w, h) => {
       for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#786c58' : '#4e221b'; c.fillRect(i * 32, 0, 32, h); }
       c.fillStyle = 'rgba(20,14,10,0.32)'; c.fillRect(0, 0, w, 10); c.fillRect(0, h - 12, w, 12);
     });
-    const aw = part(box(2.6, 0.05, 1.3), new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.92 }), g, 0, 2.05, 0.1);
+    const awM = new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.92 });
+    const aw = part(box(2.68, 0.06, 1.36), awM, g, 0, 2.06, 0.08);
     aw.rotation.x = 0.18;
+    part(box(2.68, 0.18, 0.04), awM, g, 0, 1.88, 0.74);
     // 좌판 위 나무 상자와 자루, 둘레의 통·양동이·등불
     [[-0.75, 0.36, 0.22, 0.32, 0.08], [-0.15, 0.42, 0.2, 0.34, -0.12], [0.55, 0.38, 0.24, 0.3, 0.15]].forEach(([x, w, h, d, r]) => {
       const bx = part(box(w, h, d), K.wood, g, x, 0.9 + h / 2, 0);
@@ -11054,15 +11124,20 @@ function buildTown() {
       if (i % 2 === 0) prop(W, 'ph:rock_07', x + 0.75, y - 0.35, { s: 0.65, rot: i * 2.1, shadow: false });
     });
     const sign = sg(W, 4.7, 7.8, -0.3);
-    part(cyl(0.07, 0.09, 2.4, 8), K.wood, sign, 0, 1.2, 0);
-    [['순환의 탑', '#7870b8', 2.05, 0.3], ['화염의 협곡', '#b85c2c', 1.65, -0.25], ['증기의 지하도시', '#4a8e82', 1.25, 0.35], ['법전의 성채', '#a88a48', 0.85, -0.2]].forEach(([t, c, y, r]) => {
+    part(cyl(0.24, 0.28, 0.18, 8), K.stoneDark, sign, 0, 0.09, 0);
+    part(cyl(0.14, 0.18, 0.22, 8), K.iron, sign, 0, 0.24, 0);
+    part(cyl(0.075, 0.095, 2.4, 10), K.wood, sign, 0, 1.28, 0);
+    part(cyl(0.03, 0.09, 0.22, 8), K.iron, sign, 0, 2.56, 0);
+    part(sphere(0.045, 8, 6), K.gold, sign, 0, 2.68, 0);
+    [['순환의 탑', '#7870b8', 2.08, 0.3], ['화염의 협곡', '#b85c2c', 1.68, -0.25], ['증기의 지하도시', '#4a8e82', 1.28, 0.35], ['법전의 성채', '#a88a48', 0.88, -0.2]].forEach(([t, c, y, r]) => {
+      part(cyl(0.095, 0.095, 0.08, 10), K.iron, sign, 0, y, 0);
       const tex = canvasTex(256, 64, (g, w, h) => {
         g.fillStyle = '#3d2b1c'; g.fillRect(0, 0, w, h);
         g.strokeStyle = '#1e140c'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
         g.fillStyle = c; g.fillRect(4, 4, 8, h - 8);
         g.fillStyle = '#d4c39e'; g.font = 'bold 28px serif'; g.textBaseline = 'middle'; g.fillText(t, 22, h / 2 + 2);
       });
-      const b = part(box(0.95, 0.24, 0.05), [K.wood, K.wood, K.wood, K.wood, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.88 }), K.wood], sign, 0.3, y, 0);
+      const b = part(box(0.95, 0.24, 0.055), [K.wood, K.wood, K.wood, K.wood, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.88 }), K.wood], sign, 0.3, y, 0);
       b.rotation.y = r;
     });
     addObs(W, 4.7, 7.8, 0.3);
@@ -11113,10 +11188,12 @@ function buildS1() {
   // 기둥·받침·석판·돌: 받은 돌 블록 질감 (medieval_blocks_02)
   surfUpgrade(pil, 'blocks', 2, 2.5, { tint: 0xaab0bc }); surfUpgrade(pilD, 'blocks', 1, 1, { tint: 0x8a8e98 });
   function column(sx, sy, h, broken) {
-    // 받은 기둥 (view-props): 온전한 것은 장식 기둥, 부서진 것은 짧은 기둥과 무너진 돌무더기
+    // 고딕 천문탑 석주: 다단 초석과 주두 몰딩, 황동 천문 고리
     const g = sg(W, sx, sy, rand(0, TAU));
-    part(box(1.1, 0.35, 1.1), pilD, g, 0, 0.17, 0);
-    const cg = new THREE.CylinderGeometry(0.38, 0.42, h, 16, 4);
+    part(box(1.18, 0.22, 1.18), pilD, g, 0, 0.11, 0);
+    part(cyl(0.52, 0.58, 0.20, 16), pilD, g, 0, 0.32, 0);
+    part(geo('col-base-torus', () => new THREE.TorusGeometry(0.45, 0.045, 6, 20)), pil, g, 0, 0.43, 0).rotation.x = Math.PI / 2;
+    const cg = new THREE.CylinderGeometry(0.38, 0.43, h, 20, 4);
     if (broken) {
       // 윗면과 옆면이 같은 모서리를 별도 정점으로 갖는다. 같은 위치는 같은 높이로 깨뜨리고
       // 짧은 기둥에서도 다음 줄(h/4) 아래로 뒤집히지 않게 한다.
@@ -11128,8 +11205,13 @@ function buildS1() {
       }
       cg.computeVertexNormals();
     }
-    part(cg, pil, g, 0, 0.35 + h / 2, 0);
-    if (!broken) { part(box(1.0, 0.3, 1.0), pilD, g, 0, 0.35 + h + 0.15, 0); part(geo('runeband', () => new THREE.TorusGeometry(0.43, 0.04, 6, 24)), brass, g, 0, 0.35 + h * 0.6, 0).rotation.x = Math.PI / 2; }
+    part(cg, pil, g, 0, 0.42 + h / 2, 0);
+    part(geo('runeband-low', () => new THREE.TorusGeometry(0.425, 0.032, 6, 24)), brass, g, 0, 0.42 + Math.min(1.1, h * 0.35), 0).rotation.x = Math.PI / 2;
+    if (!broken) {
+      part(cyl(0.56, 0.40, 0.22, 16), pil, g, 0, 0.42 + h + 0.08, 0);
+      part(box(1.08, 0.26, 1.08), pilD, g, 0, 0.42 + h + 0.30, 0);
+      part(geo('runeband', () => new THREE.TorusGeometry(0.41, 0.04, 6, 24)), brass, g, 0, 0.42 + h * 0.68, 0).rotation.x = Math.PI / 2;
+    }
     addObs(W, sx, sy, 0.75);
   }
   [[-8, 3.5, 4.5, false], [-9.5, -1.5, 3.2, true], [10, 6, 4.5, false], [10.5, -3, 2.2, true], [-12.5, 9.5, 4.8, false], [-3.5, 8.5, 4.6, false], [12.5, 1.5, 1.8, true]].forEach((c) => column(...c));
@@ -11178,18 +11260,29 @@ function buildS1() {
     W.updaters.push((dt, t) => { ring.rotation.set(Math.PI / 2 + Math.sin(t * 0.5 + sd) * 0.4, t * 0.3 + sd, 0); ring.position.y = 3.4 + Math.sin(t * 0.9 + sd) * 0.3; });
   });
   for (let i = 0; i < 9; i++) { const g = sg(W, rand(-13, 13), rand(-9, 9.5), rand(0, TAU)); part(rockGeo(1, i % 7), pilD, g, 0, 0.15, 0).scale.setScalar(rand(0.25, 0.5)); }
-  // 전투 구역 둘레의 룬 석판
+  // 전투 구역 둘레의 고딕 아치형 룬 석판 (2단 석조 받침, 좌우 소기둥, 아치형 박공 머리돌과 황동 장식)
   [[-7.6, 1.2, 0.4], [9.6, -0.6, -0.5], [2.8, 7.6, 0.1], [-3.2, -6.2, 0.6], [6.4, -6.0, -0.3]].forEach(([x, y, r], i) => {
     const g = sg(W, x, y, r);
-    part(box(0.9, 0.18, 0.5), pilD, g, 0, 0.09, 0);
-    const lecture = i === 0 || i === 4;
-    const slab = part(box(lecture ? 1.05 : 0.7, 1.15, 0.16), pil, g, 0, 0.75, 0);
-    slab.rotation.x = -0.08;
-    const size = lecture ? 0.88 : 0.46;
+    const lecture = i === 0 || i === 4, w = lecture ? 1.06 : 0.74;
+    part(box(w + 0.34, 0.14, 0.56), pilD, g, 0, 0.07, 0);
+    part(box(w + 0.18, 0.12, 0.44), pil, g, 0, 0.20, 0);
+    const st = grp(g, 0, 0.84, 0);
+    st.rotation.x = -0.07;
+    part(box(w, 1.16, 0.18), pil, st, 0, 0, 0);
+    [-1, 1].forEach((s) => {
+      const px = s * (w / 2 + 0.05);
+      part(cyl(0.06, 0.07, 1.18, 10), pilD, st, px, 0, 0.02);
+      part(cyl(0.08, 0.08, 0.06, 10), brass, st, px, -0.52, 0.02);
+      part(cyl(0.08, 0.08, 0.06, 10), brass, st, px, 0.52, 0.02);
+    });
+    part(box(w + 0.22, 0.12, 0.26), pilD, st, 0, 0.62, 0.01);
+    const arch = part(geo(`s1-arch:${w}`, () => new THREE.CylinderGeometry(w * 0.46, w * 0.46, 0.20, 16, 1, false, -Math.PI / 2, Math.PI)), pil, st, 0, 0.66, 0.01);
+    arch.rotation.z = Math.PI / 2; arch.rotation.y = Math.PI / 2;
+    part(sphere(0.055, 8, 6), brass, st, 0, 0.66 + w * 0.48, 0.01);
+    const size = lecture ? 0.86 : 0.48;
     const mark = new THREE.MeshBasicMaterial({ map: lecture ? cycle : runeRing('#e8ecf8', 8 + i, 0.45),
-      color: lecture ? 0xc6b58e : 0x9ba9b8, transparent: true, opacity: 0.75, depthWrite: false });
-    // 석판과 같은 각도로 붙여 위아래 획이 돌 속으로 파고들지 않게 한다.
-    const rune = part(new THREE.PlaneGeometry(size, size), mark, slab, 0, 0.04, 0.083);
+      color: lecture ? 0xc6b58e : 0x9ba9b8, transparent: true, opacity: 0.78, depthWrite: false });
+    const rune = part(new THREE.PlaneGeometry(size, size), mark, st, 0, 0.02, 0.094);
     rune.castShadow = false;
     addObs(W, x, y, 0.55);
   });
@@ -11204,10 +11297,17 @@ function buildS1() {
   // 중앙 황동 천구의(Orrery) 성소 랜드마크: 두 고딕 석상 사이에서 천천히 맞물려 돈다
   {
     const og = sg(W, 0.2, 9.2);
-    part(cyl(1.35, 1.55, 0.36, 20), pilD, og, 0, 0.18, 0);
-    part(cyl(0.95, 1.15, 0.48, 20), pil, og, 0, 0.6, 0);
-    part(geo('orbase', () => new THREE.TorusGeometry(1.02, 0.06, 8, 28)), brass, og, 0, 0.84, 0).rotation.x = Math.PI / 2;
-    part(cyl(0.16, 0.22, 1.35, 12), brass, og, 0, 1.45, 0);
+    part(cyl(1.42, 1.62, 0.26, 16), pilD, og, 0, 0.13, 0);
+    part(cyl(1.18, 1.32, 0.28, 16), pil, og, 0, 0.38, 0);
+    part(cyl(0.92, 1.08, 0.42, 16), pilD, og, 0, 0.72, 0);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU + Math.PI / 4;
+      part(box(0.24, 0.62, 0.38), pil, og, Math.cos(a) * 1.05, 0.46, Math.sin(a) * 1.05).rotation.y = -a;
+    }
+    part(geo('orbase', () => new THREE.TorusGeometry(1.02, 0.065, 8, 28)), brass, og, 0, 0.94, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.28, 0.36, 0.24, 12), brass, og, 0, 1.06, 0);
+    part(cyl(0.15, 0.21, 1.25, 14), brass, og, 0, 1.62, 0);
+    part(geo('orcradle', () => new THREE.TorusGeometry(1.28, 0.045, 8, 32, Math.PI)), brass, og, 0, 2.35, 0).rotation.z = Math.PI;
     const r1 = part(geo('orr1', () => new THREE.TorusGeometry(1.18, 0.055, 10, 36)), brass, og, 0, 2.35, 0);
     const r2 = part(geo('orr2', () => new THREE.TorusGeometry(0.88, 0.045, 10, 32)), brass, og, 0, 2.35, 0);
     const r3 = part(geo('orr3', () => new THREE.TorusGeometry(0.58, 0.038, 8, 28)), brass, og, 0, 2.35, 0);
@@ -11264,19 +11364,20 @@ function lavaUpgrade(m, rx, ry) {
 function basaltUpgrade(m, rx, tint) {
   assetPack('s2rock', PACK_S2.rock).then((T) => {
     if (!T) return;
-    assetUpgrade(m, { map: assetRep(T.map, rx), normalMap: assetRep(T.normalMap, rx), roughnessMap: assetRep(T.arm, rx), aoMap: assetRep(T.arm, rx), roughness: 1, metalness: 0, color: tint });
+    assetUpgrade(m, { map: assetRep(T.map, rx), normalMap: assetRep(T.normalMap, rx), roughnessMap: assetRep(T.arm, rx), aoMap: assetRep(T.arm, rx), roughness: 1, metalness: 0, flatShading: false, color: tint });
   });
 }
 // 받은 바위 모델(Poly Haven rock_09)을 자리마다 놓는다: [화면 x, 화면 y, 높이, 돌림]. 다 읽기 전에는 코드로 만든 바위(fallback)가 서 있다가 바뀐다
-function boulders(W, list, tint) {
+function boulders(W, list, tint, rockMat) {
+  const fbMat = rockMat || stdM(0x2a2422, 0.95, 0, { flatShading: true });
   const holders = list.map(([x, y, h, r], i) => {
     const g = sg(W, x, y, r);
-    const fb = part(rockGeo(1, (i + 2) % 7), stdM(0x2a2422, 0.95, 0, { flatShading: true }), g, 0, h * 0.42, 0);
-    fb.scale.set(h * 0.7, h * 0.5, h * 0.6);
+    const fb = part(rockGeo(1, (i + 2) % 7), fbMat, g, 0, h * 0.42, 0);
+    fb.scale.set(h * 0.72, h * 0.52, h * 0.62);
     addObs(W, x, y, h * 0.55);
     return { g, fb, h };
   });
-  // 낮은 화질(약한 기기)에서는 무거운 사진 바위(2만 삼각형)를 쓰지 않고 코드로 만든 바위를 둔다
+  // 낮은 화질(약한 기기)에서는 무거운 사진 바위(2만 삼각형)를 쓰지 않고 현무암 PBR 질감이 입혀진 조각 바위를 둔다
   if (qualKey() === 'low') return;
   assetModel('s2/rock_09/rock_09.json').then((M) => {
     if (!M) return;
@@ -11287,7 +11388,7 @@ function boulders(W, list, tint) {
       mesh.scale.setScalar(k);
       mesh.position.y = -M.geo.boundingBox.min.y * k - 0.05;
       mesh.castShadow = mesh.receiveShadow = true;
-      g.remove(fb); fb.material.dispose();
+      g.remove(fb);
       g.add(mesh);
     });
   });
@@ -11352,8 +11453,8 @@ function buildS2() {
     addObs(W, x, y, 0.7);
   });
   pLight(W, w2(7, 11.5, 1.5), 0xff5a1a, 12, 12, { flicker: true });
-  // 싸움터 가장자리의 큰 바위 (받은 모델)
-  boulders(W, [[-12.6, -6.4, 2.2, 0.4], [12.9, -6.8, 1.9, 2.1], [-12.2, 7.6, 2.5, 4.0], [13.1, 8.2, 2.0, 1.2], [-1.8, 9.6, 1.6, 2.8], [5.8, -9.2, 1.4, 5.1]], 0x8a7c74);
+  // 싸움터 가장자리의 큰 바위 (받은 모델 + PBR 현무암 대체재)
+  boulders(W, [[-12.6, -6.4, 2.2, 0.4], [12.9, -6.8, 1.9, 2.1], [-12.2, 7.6, 2.5, 4.0], [13.1, 8.2, 2.0, 1.2], [-1.8, 9.6, 1.6, 2.8], [5.8, -9.2, 1.4, 5.1]], 0x8a7c74, rock);
   for (let i = 0; i < 16; i++) {
     const x = -24 + i * 3.2, y = 17 + rand(-1, 2);
     const g = sg(W, x, y, rand(0, TAU));
@@ -11362,8 +11463,13 @@ function buildS2() {
   [[-15.5, -8], [-16, -1], [-16.5, 6], [16, -9], [16.5, -2], [16, 5]].forEach(([x, y], i) => { const g = sg(W, x, y, rand(0, TAU)); const k = rand(2, 2.8); part(rockGeo(1, (i + 3) % 7), rock, g, 0, 1.4, 0).scale.set(k, k * rand(1.3, 2), k); });
   [[-8.5, -4], [8, 6], [-10.5, 0.5], [11, 1.5], [-3, 7.5], [3.5, 8.5]].forEach(([x, y], i) => {
     const g = sg(W, x, y, rand(0, TAU));
-    const sp = part(geo(`spire${i % 3}`, () => { const cg = new THREE.ConeGeometry(0.9, 3.6, 7, 3); const p = cg.attributes.position; for (let k = 0; k < p.count; k++) { const h = hash2(Math.round(p.getX(k) * 40), Math.round(p.getY(k) * 40) + Math.round(p.getZ(k) * 30), i % 3); p.setX(k, p.getX(k) * (0.8 + h * 0.4)); p.setZ(k, p.getZ(k) * (0.8 + h * 0.4)); } cg.computeVertexNormals(); return cg; }), rock, g, 0, 1.6, 0);
-    sp.scale.setScalar(rand(0.8, 1.3));
+    const sc = rand(0.85, 1.25);
+    const sp = part(geo(`spire${i % 3}`, () => { const cg = new THREE.ConeGeometry(0.95, 3.8, 14, 6); const p = cg.attributes.position; for (let k = 0; k < p.count; k++) { const h = hash2(Math.round(p.getX(k) * 40), Math.round(p.getY(k) * 40) + Math.round(p.getZ(k) * 30), i % 3); p.setX(k, p.getX(k) * (0.78 + h * 0.44)); p.setZ(k, p.getZ(k) * (0.78 + h * 0.44)); } cg.computeVertexNormals(); return cg; }), rock, g, 0, 1.65 * sc, 0);
+    sp.scale.setScalar(sc);
+    for (let b = 0; b < 3; b++) {
+      const a = (b / 3) * TAU + i, sub = part(rockGeo(0.52, (i + b * 2) % 7), b % 2 ? rock2 : rock, g, Math.cos(a) * 0.55 * sc, 0.32 * sc, Math.sin(a) * 0.55 * sc);
+      sub.scale.set(0.9 * sc, 1.3 * sc, 0.85 * sc);
+    }
     addObs(W, x, y, 0.9);
   });
   // 연돌(굴뚝)과 파괴된 용광로 랜드마크: 검은 벽돌과 무쇠 띠, 용암 화구
@@ -11373,18 +11479,27 @@ function buildS2() {
     const ironM = stdM(0x2a1e18, 0.55, 0.8);
     surfUpgrade(ironM, 'rusty', 2, 1, { tint: 0x7a685c, metal: true });
     const g = sg(W, -6.5, 15.5);
-    part(box(3.8, 2.4, 3.8), bm, g, 0, 1.2, 0);
-    part(cyl(1.05, 1.55, 12, 18), bm, g, 0, 6, 0);
-    [2.6, 5.8, 9.2, 12.1].forEach((y) => part(cyl(1.38 - y * 0.02, 1.42 - y * 0.02, 0.36, 18), ironM, g, 0, y, 0));
-    part(box(1.4, 1.1, 0.12), pool, g, 0, 1.1, 1.92);
+    part(box(4.1, 0.45, 4.1), bm, g, 0, 0.22, 0);
+    part(box(3.8, 2.3, 3.8), bm, g, 0, 1.25, 0);
+    part(box(4.0, 0.24, 4.0), ironM, g, 0, 2.42, 0);
+    part(cyl(1.05, 1.55, 12, 20), bm, g, 0, 6, 0);
+    [2.8, 5.8, 9.0, 11.8].forEach((y) => part(cyl(1.38 - y * 0.02, 1.42 - y * 0.02, 0.36, 20), ironM, g, 0, y, 0));
+    part(cyl(1.24, 1.12, 0.42, 20), ironM, g, 0, 12.1, 0);
+    part(box(1.56, 1.26, 0.24), ironM, g, 0, 1.1, 1.88);
+    part(box(1.36, 1.08, 0.14), pool, g, 0, 1.1, 1.94);
+    [-0.4, 0, 0.4].forEach((gx) => part(cyl(0.04, 0.04, 1.18, 8), ironM, g, gx, 1.1, 2.02));
     smokeStack(W, w2(-6.5, 15.5, 12.4), 7, 0x3a302a, 1.8);
     fire(W, w2(-6.5, 15.5, 12.3), 0.9);
     // 오른쪽 무너진 부속 제련로
     const g2 = sg(W, 5.4, 14.8, -0.2);
-    part(box(3.2, 2.0, 3.2), bm, g2, 0, 1.0, 0);
-    part(cyl(1.1, 1.4, 5.2, 16), bm, g2, 0, 3.6, 0);
-    part(cyl(1.28, 1.32, 0.34, 16), ironM, g2, 0, 3.4, 0);
-    part(box(1.1, 0.9, 0.12), pool, g2, 0, 0.95, 1.62);
+    part(box(3.5, 0.4, 3.5), bm, g2, 0, 0.20, 0);
+    part(box(3.2, 1.9, 3.2), bm, g2, 0, 1.05, 0);
+    part(box(3.38, 0.22, 3.38), ironM, g2, 0, 2.02, 0);
+    part(cyl(1.1, 1.4, 5.2, 18), bm, g2, 0, 3.6, 0);
+    [2.4, 4.4, 6.0].forEach((y) => part(cyl(1.34 - y * 0.03, 1.38 - y * 0.03, 0.32, 18), ironM, g2, 0, y, 0));
+    part(box(1.26, 1.04, 0.22), ironM, g2, 0, 0.95, 1.58);
+    part(box(1.08, 0.88, 0.14), pool, g2, 0, 0.95, 1.64);
+    [-0.3, 0, 0.3].forEach((gx) => part(cyl(0.035, 0.035, 0.96, 8), ironM, g2, gx, 0.95, 1.72));
     fire(W, w2(5.4, 14.8, 6.2), 0.65);
   }
   const vRockTint = (m) => { const c = m.clone(); c.color.multiply(C(0x5c4a42)); c.roughness = 0.95; return c; };
@@ -11395,16 +11510,19 @@ function buildS2() {
   prop(W, 'ph:rock_07', 11.5, -2.8, { rot: 2.2, s: 1.25, mat: vRockTint, matKey: 's2vrock7', obs: 0.95 });
   prop(W, 'ph:old_military_crate', 1.8, 8.4, { rot: 0.35, obs: 0.7 });
   prop(W, 'ph:metal_tool_chest', -7.8, -6.6, { rot: -0.45, obs: 0.65 });
+  const charBark = texMatR('bark', 128, [1, 2], { roughness: 0.94, color: new THREE.Color(0x281c16) });
   for (let i = 0; i < 5; i++) {
     const tx = [-5.5, 9.5, -10, 0.5, 11.5][i], ty = [4.8, -1.5, -5.5, 7.8, 5.5][i];
     const g = sg(W, tx, ty, rand(0, TAU));
-    const m = stdM(0x1c1410, 0.92);
     for (let k = 0; k < 3; k++) {
       const a = (k / 3) * TAU + i, rk = part(rockGeo(1, (i + k) % 7), k % 2 ? rock : rock2, g, Math.cos(a) * 0.28, 0.14, Math.sin(a) * 0.28);
       rk.scale.set(0.36, 0.22, 0.32);
     }
-    part(cyl(0.08, 0.18, 2.2, 6), m, g, 0, 1.1, 0);
-    [[0.6, 1.5, 0.7], [-0.5, 1.2, -0.8], [0.3, 1.9, -0.5]].forEach(([x, y, r]) => { const b = part(cyl(0.03, 0.07, 1.0, 5), m, g, x * 0.4, y, 0); b.rotation.z = r; });
+    part(cyl(0.09, 0.22, 2.2, 10), charBark, g, 0, 1.1, 0);
+    [[0.6, 1.5, 0.7], [-0.5, 1.2, -0.8], [0.3, 1.9, -0.5]].forEach(([x, y, r]) => {
+      const b = part(cyl(0.028, 0.075, 1.05, 8), charBark, g, x * 0.4, y, 0);
+      b.rotation.z = r;
+    });
     addObs(W, tx, ty, 0.45);
   }
   W.updaters.push((dt) => {
@@ -11447,8 +11565,11 @@ function buildS3() {
   const pipeM = stdM(0x78746c, 0.38, 0.85), copper = stdM(0xb06a3c, 0.35, 0.9), dark = stdM(0x22201e, 0.6, 0.6), red = stdM(0xa8261c, 0.5, 0.3);
   // 바닥과 같은 512 텍스처를 나눠 쓴다 (텍스처 키에 크기가 들어가기 전에도 늘 이것이 쓰였다)
   const wallM = texMatR('metal', 512, [6, 2], { roughness: 0.6, metalness: 0.5 });
-  // 받은 질감: 벽은 검은 벽돌, 배관은 녹슨 쇠 (Poly Haven)
-  surfUpgrade(wallM, 'dbrick', 14, 3, { tint: 0x8a8070 }); surfUpgrade(pipeM, 'rusty', 3, 1, { tint: 0xb0a090 });
+  // 받은 질감: 벽은 검은 벽돌, 배관·주물·구리는 녹슨 쇠 PBR (Poly Haven)
+  surfUpgrade(wallM, 'dbrick', 14, 3, { tint: 0x8a8070 });
+  surfUpgrade(pipeM, 'rusty', 3, 1, { tint: 0xb0a090 });
+  surfUpgrade(dark, 'rusty', 2, 2, { tint: 0x4e4842, metal: true });
+  surfUpgrade(copper, 'rusty', 2, 1, { tint: 0xc87a48, gain: 1.15, metal: true });
   { const g = sg(W, 0, 13); part(box(60, 12, 1), wallM, g, 0, 6, 0); }
   { const g = sg(W, -16, 0, Math.PI / 2); part(box(50, 12, 1), wallM, g, 0, 6, 0); }
   { const g = sg(W, 16.5, 0, -Math.PI / 2); part(box(50, 12, 1), wallM, g, 0, 6, 0); }
@@ -11487,24 +11608,36 @@ function buildS3() {
     addObs(W, sx, sy, 3.2);
   }
   boiler(-6.2, 7.0, 0.1); boiler(8.2, 6.6, -0.15);
-  // 부르동관 압력계 (거대 장식)
+  // 부르동관 압력계 (거대 황동·주물 계기판과 사이펀 코일 배관)
   {
     const g = sg(W, -8.2, -2.4);
-    part(cyl(0.18, 0.22, 3, 10), dark, g, 0, 1.5, 0);
+    part(cyl(0.54, 0.62, 0.22, 8), bBrick, g, 0, 0.11, 0);
+    part(cyl(0.34, 0.42, 0.28, 12), dark, g, 0, 0.34, 0);
+    part(cyl(0.18, 0.22, 2.8, 12), dark, g, 0, 1.6, 0);
+    [0.9, 2.2].forEach((hy) => part(cyl(0.26, 0.26, 0.12, 12), copper, g, 0, hy, 0));
+    part(geo('siphon-coil', () => new THREE.TorusGeometry(0.28, 0.05, 8, 20)), copper, g, 0.28, 1.55, 0);
     const gm = emit(W, new THREE.MeshStandardMaterial({ map: gaugeTex(), roughness: 0.4, emissive: new THREE.Color(0x2a2a20), emissiveIntensity: 0.8 }));
-    const d = part(geo('bigdial', () => new THREE.CylinderGeometry(1.1, 1.1, 0.2, 32)), [copper, gm, copper], g, 0, 3.6, 0);
+    const d = part(geo('bigdial', () => new THREE.CylinderGeometry(1.1, 1.1, 0.24, 32)), [copper, gm, copper], g, 0, 3.6, 0);
     d.rotation.x = Math.PI / 2;
-    part(geo('dialrim', () => new THREE.TorusGeometry(1.12, 0.09, 8, 32)), copper, g, 0, 3.6, 0.1);
+    part(geo('dialrim', () => new THREE.TorusGeometry(1.12, 0.095, 8, 32)), copper, g, 0, 3.6, 0.11);
+    part(cyl(0.11, 0.11, 0.08, 12), dark, g, 0, 3.6, 0.16).rotation.x = Math.PI / 2;
     const nd = part(box(0.08, 0.85, 0.04), red, g, 0, 3.6, 0.16);
     nd.userData.dyn = true;
     W.updaters.push((dt, t) => { nd.rotation.z = -0.4 + Math.sin(t * 0.5) * 0.35; });
     addObs(W, -8.2, -2.4, 0.6);
   }
+  // 바닥 증기 분출구 (8각 플랜지와 황동 노즐 테두리, 십자 철망)
   [[-6.5, -5.5], [9, -4.5], [10.5, 0.8], [-10, 2.2], [1.5, 8]].forEach(([x, y], i) => {
     const vent = sg(W, x, y);
-    part(cyl(0.45, 0.55, 0.3, 12), dark, vent, 0, 0.15, 0);
-    part(box(0.7, 0.04, 0.7), stdM(0x2a3230, 0.5, 0.7), vent, 0, 0.31, 0);
-    const p = w2(x, y, 0.35), c = C(0xe8f4f0), period = 3 + i * 0.7;
+    part(cyl(0.60, 0.66, 0.12, 8), bBrick, vent, 0, 0.06, 0);
+    part(cyl(0.44, 0.54, 0.26, 14), dark, vent, 0, 0.22, 0);
+    part(geo('vent-rim', () => new THREE.TorusGeometry(0.45, 0.045, 8, 20)), copper, vent, 0, 0.35, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.40, 0.40, 0.04, 14), stdM(0x0c0e0e, 0.95), vent, 0, 0.33, 0);
+    [-0.18, 0, 0.18].forEach((ofs) => {
+      part(box(0.76, 0.04, 0.05), dark, vent, 0, 0.36, ofs);
+      part(box(0.05, 0.04, 0.76), dark, vent, ofs, 0.36, 0);
+    });
+    const p = w2(x, y, 0.38), c = C(0xe8f4f0), period = 3 + i * 0.7;
     W.updaters.push((dt, t) => {
       // 읽는 동안에는 김을 뿜지 않는다 (느린 시계로 뿜는 채 멈춰 있지 않게)
       const on = (t % period) < 1.3 && CALM.k > 0.5;
@@ -11512,12 +11645,20 @@ function buildS3() {
     });
     addObs(W, x, y, 0.6);
   });
-  // 가스등: 호박빛 웅덩이가 둘레 바닥을 비춘다. 등갓 자체는 주변 발광 예산 안이라 번지지 않는다
+  // 가스등: 주물 기단과 4기둥 철제 등롱 케이지, 피라미드 갓을 갖춘 빅토리아풍 가스 가로등
   const lampM = emit(W, emiM(0xffb060, 2.6, 0x2a1a0a));
   [[-4, 11.5], [6, 11.5], [-12, 5.5], [12.5, 4.5], [-12, -4.5], [12.5, -5]].forEach(([x, y], i) => {
     const g = sg(W, x, y);
-    part(cyl(0.06, 0.08, 3.4, 8), dark, g, 0, 1.7, 0);
-    part(box(0.36, 0.5, 0.36), lampM, g, 0, 3.5, 0);
+    part(cyl(0.20, 0.26, 0.22, 10), dark, g, 0, 0.11, 0);
+    part(cyl(0.12, 0.18, 0.36, 10), dark, g, 0, 0.38, 0);
+    part(cyl(0.055, 0.085, 2.8, 10), dark, g, 0, 1.9, 0);
+    part(cyl(0.11, 0.08, 0.10, 10), copper, g, 0, 2.95, 0);
+    part(box(0.52, 0.045, 0.045), dark, g, 0, 2.95, 0);
+    part(cyl(0.24, 0.14, 0.10, 8), dark, g, 0, 3.24, 0);
+    part(cyl(0.17, 0.13, 0.48, 8), lampM, g, 0, 3.52, 0);
+    [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]].forEach(([cx, cz]) => part(cyl(0.018, 0.018, 0.52, 6), dark, g, cx, 3.52, cz));
+    part(geo('s3-lamp-cap', () => new THREE.ConeGeometry(0.30, 0.24, 8)), copper, g, 0, 3.86, 0);
+    part(sphere(0.045, 8, 6), dark, g, 0, 4.00, 0);
     if (i < 3) pLight(W, w2(x, y, 3.3), 0xffb466, 7, 11, { flicker: i === 1 });
   });
   // 상자와 통: 받은 소품(view-props)이 있으면 쌓인 상자·큰 통·술통, 없으면 코드로 만든 것
@@ -11570,11 +11711,14 @@ function buildS3() {
   // 뒤쪽 중앙 증기 분배기(Steam Manifold) 및 밸브 벽면 랜드마크
   {
     const mg = sg(W, 1.2, 10.6);
-    part(box(3.4, 0.45, 1.6), bBrick, mg, 0, 0.22, 0);
-    part(cyl(0.65, 0.72, 3.2, 18), bShell, mg, 0, 1.9, 0);
+    part(box(3.5, 0.45, 1.65), bBrick, mg, 0, 0.22, 0);
+    part(cyl(0.66, 0.72, 3.1, 20), bShell, mg, 0, 1.9, 0);
+    part(geo('mcap', () => new THREE.SphereGeometry(0.66, 20, 10, 0, TAU, 0, Math.PI / 2)), bShell, mg, 0, 3.44, 0);
+    [1.1, 2.7].forEach((hy) => part(geo(`mring:${hy}`, () => new THREE.TorusGeometry(0.70, 0.05, 8, 24)), dark, mg, 0, hy, 0).rotation.x = Math.PI / 2);
     [-1.1, 1.1].forEach((x) => {
       part(cyl(0.28, 0.32, 2.8, 14), copper, mg, x, 1.6, 0.15);
       part(geo('mband', () => new THREE.TorusGeometry(0.32, 0.045, 6, 20)), dark, mg, x, 2.2, 0.15).rotation.x = Math.PI / 2;
+      part(cyl(0.22, 0.22, 0.65, 12), copper, mg, x * 0.55, 2.6, 0.12).rotation.z = Math.PI / 2;
     });
     const fw = grp(mg, 0, 2.1, 0.72);
     part(geo('mwheel', () => new THREE.TorusGeometry(0.55, 0.06, 8, 24)), red, fw);
@@ -11585,15 +11729,28 @@ function buildS3() {
   }
   [[-1.8, 10.4], [4.2, 10.4]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 3.5, s: 1.35, shadow: false }));
   [[-6.8, -6.8], [3.6, -6.8]].forEach(([x, y], i) => prop(W, i ? 'ph:wooden_lantern_01' : 'ph:metal_tool_chest', x, y, { rot: i * 0.8 - 0.3, shadow: false }));
-  // 바닥 배관, 밸브대, 응축수 웅덩이
-  { const g = sg(W, 1.5, 7.2); part(geo('floorpipe', () => new THREE.CylinderGeometry(0.28, 0.28, 18, 14)), pipeM, g, 0, 0.3, 0).rotation.z = Math.PI / 2; for (let i = -3; i <= 3; i++) { part(box(0.5, 0.35, 0.7), dark, g, i * 2.6, 0.17, 0); } }
+  // 바닥 배관(새들 클램프 받침), 밸브대, 응축수 웅덩이
+  {
+    const g = sg(W, 1.5, 7.2);
+    part(geo('floorpipe', () => new THREE.CylinderGeometry(0.28, 0.28, 18, 16)), pipeM, g, 0, 0.32, 0).rotation.z = Math.PI / 2;
+    for (let i = -3; i <= 3; i++) {
+      const sx = i * 2.6;
+      part(box(0.46, 0.22, 0.74), bBrick, g, sx, 0.11, 0);
+      const clampG = part(geo('pipe-saddle', () => new THREE.TorusGeometry(0.30, 0.04, 6, 16, Math.PI)), dark, g, sx, 0.32, 0);
+      clampG.rotation.y = Math.PI / 2;
+    }
+  }
   {
     const g = sg(W, -7.2, 4.6);
-    part(box(0.9, 1.0, 0.9), dark, g, 0, 0.5, 0);
-    part(cyl(0.12, 0.12, 1.4, 10), copper, g, 0, 1.6, 0);
-    const wh = grp(g, 0, 2.35, 0);
-    part(geo('wheel2', () => new THREE.TorusGeometry(0.42, 0.05, 8, 24)), red, wh).rotation.x = Math.PI / 2;
-    [0, 1, 2].forEach((k) => { const sp = part(box(0.84, 0.04, 0.04), red, wh); sp.rotation.y = (k / 3) * Math.PI; });
+    part(box(1.06, 0.24, 1.06), bBrick, g, 0, 0.12, 0);
+    part(cyl(0.38, 0.44, 0.78, 12), dark, g, 0, 0.62, 0);
+    part(cyl(0.46, 0.46, 0.12, 12), copper, g, 0, 1.02, 0);
+    part(sphere(0.24, 12, 10), dark, g, 0, 1.24, 0);
+    part(cyl(0.11, 0.13, 1.15, 12), copper, g, 0, 1.78, 0);
+    const wh = grp(g, 0, 2.38, 0);
+    part(geo('wheel2', () => new THREE.TorusGeometry(0.44, 0.055, 8, 24)), red, wh).rotation.x = Math.PI / 2;
+    part(cyl(0.09, 0.09, 0.08, 10), copper, wh);
+    [0, 1, 2].forEach((k) => { const sp = part(box(0.86, 0.042, 0.042), red, wh); sp.rotation.y = (k / 3) * Math.PI; });
     W.updaters.push((dt, t) => { wh.rotation.y = Math.sin(t * 0.4) * 0.6; });
     addObs(W, -7.2, 4.6, 0.8);
   }
@@ -11607,15 +11764,21 @@ function buildS3() {
 
 // 법전의 성채: 안전·법규 (풍화된 고딕 석비와 고서적, 조문 한글 제거)
 function steleTex() {
-  return canvasTex(256, 384, (g, Wd, H) => {
+  return canvasTex(512, 768, (g, Wd, H) => {
     g.fillStyle = '#968870'; g.fillRect(0, 0, Wd, H);
-    for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? '210,198,175' : '50,40,26'},${Math.random() * 0.08})`; g.fillRect(Math.random() * Wd, Math.random() * H, 2, 2); }
-    g.strokeStyle = '#483a26'; g.lineWidth = 5; g.strokeRect(18, 18, Wd - 36, H - 36);
+    for (let i = 0; i < 6000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? '210,198,175' : '50,40,26'},${Math.random() * 0.08})`; g.fillRect(Math.random() * Wd, Math.random() * H, 3, 3); }
+    g.strokeStyle = '#483a26'; g.lineWidth = 10; g.strokeRect(28, 28, Wd - 56, H - 56);
+    g.strokeStyle = '#6c583c'; g.lineWidth = 4; g.strokeRect(42, 42, Wd - 84, H - 84);
     g.fillStyle = '#483a26';
-    g.beginPath(); g.arc(Wd / 2, 58, 22, 0, TAU); g.stroke();
-    g.beginPath(); g.moveTo(Wd / 2, 34); g.lineTo(Wd / 2, 82); g.moveTo(Wd / 2 - 22, 58); g.lineTo(Wd / 2 + 22, 58); g.stroke();
-    g.fillRect(36, 94, Wd - 72, 4);
-    for (let i = 0; i < 9; i++) { const w = (0.55 + ((i * 29) % 10) * 0.035) * (Wd - 76); g.fillRect(38, 118 + i * 26, w, 6); }
+    g.beginPath(); g.arc(Wd / 2, 116, 44, 0, TAU); g.stroke();
+    g.beginPath(); g.arc(Wd / 2, 116, 28, 0, TAU); g.stroke();
+    g.beginPath(); g.moveTo(Wd / 2, 64); g.lineTo(Wd / 2, 168); g.moveTo(Wd / 2 - 48, 116); g.lineTo(Wd / 2 + 48, 116); g.stroke();
+    g.fillRect(68, 188, Wd - 136, 8);
+    for (let i = 0; i < 10; i++) {
+      const w = (0.55 + ((i * 29) % 10) * 0.036) * (Wd - 144);
+      g.fillStyle = '#382c1c'; g.fillRect(72, 228 + i * 48, w, 11);
+      g.fillStyle = 'rgba(220,208,184,0.28)'; g.fillRect(72, 239 + i * 48, w, 3);
+    }
   });
 }
 // 색 (WS5.4): 금빛 몬스터가 서는 곳이라 바닥과 성벽은 회색 석회암, 대리석은 흰빛이다. 금빛은 몬스터와 화로에만
@@ -11641,38 +11804,57 @@ function buildS4() {
   }
   for (let i = 0; i < 9; i++) {
     const g = sg(W, -13 + i * 3.3, 10);
-    part(box(1.1, 0.5, 1.1), sandM, g, 0, 0.25, 0);
-    part(geo('colm', () => new THREE.CylinderGeometry(0.42, 0.48, 6, 18)), marble, g, 0, 3.5, 0);
-    part(box(1.15, 0.45, 1.15), sandM, g, 0, 6.7, 0);
+    part(box(1.22, 0.32, 1.22), sandM, g, 0, 0.16, 0);
+    part(cyl(0.54, 0.60, 0.24, 18), sandM, g, 0, 0.44, 0);
+    part(geo('colm', () => new THREE.CylinderGeometry(0.42, 0.48, 5.8, 20)), marble, g, 0, 3.45, 0);
+    part(geo('colm-ring', () => new THREE.TorusGeometry(0.46, 0.04, 6, 20)), K.gold, g, 0, 4.8, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.60, 0.44, 0.26, 18), marble, g, 0, 6.45, 0);
+    part(box(1.22, 0.36, 1.22), sandM, g, 0, 6.75, 0);
     addObs(W, -13 + i * 3.3, 10, 0.8);
   }
   { const g = sg(W, 0.2, 10); part(box(30, 1.0, 1.4), sandM, g, 0, 7.4, 0); }
   const bt = bannerTex('#6a1410', '#e2bb5a', '법');
   [[-6.2, 10], [6.6, 10], [-12.8, 10], [13.2, 10]].forEach(([x, y]) => { const g = sg(W, x, y); banner(W, g, 0, 6.5, 0.62, bt, 1.0, 2.8); });
-  // 조문 석비
-  [[-8, 4.5, '제35조'], [9, 5.5, '제31조'], [-9.5, -3, '제2조'], [10, -2.5, '제39조']].forEach(([x, y, t], i) => {
+  // 조문 석비 (2단 석조 초석, 좌우 대리석 소기둥, 고딕 아치 박공 머리돌과 황동 보주)
+  const steleFaceTex = steleTex();
+  const sm = new THREE.MeshStandardMaterial({ map: steleFaceTex, normalMap: texSet('brick', 256, { seed: 53, a: [148, 142, 130], b: [186, 180, 166] }).normalMap, roughness: 0.84 });
+  sm.normalScale.set(0.35, 0.35);
+  [[-8, 4.5, '제35조'], [9, 5.5, '제31조'], [-9.5, -3, '제2조'], [10, -2.5, '제39조']].forEach(([x, y], i) => {
     const g = sg(W, x, y, (x < 0 ? 0.35 : -0.35));
-    part(box(1.6, 0.4, 0.9), sandM, g, 0, 0.2, 0);
-    const sm = new THREE.MeshStandardMaterial({ map: steleTex(t), roughness: 0.85 });
-    part(box(1.3, 2.2, 0.35), [marble, marble, marble, marble, sm, marble], g, 0, 1.5, 0);
-    part(box(1.45, 0.25, 0.45), sandM, g, 0, 2.7, 0);
+    part(box(1.82, 0.22, 1.04), sandM, g, 0, 0.11, 0);
+    part(box(1.58, 0.22, 0.86), marble, g, 0, 0.33, 0);
+    part(box(1.28, 2.2, 0.34), [marble, marble, marble, marble, sm, marble], g, 0, 1.54, 0);
+    [-0.70, 0.70].forEach((px) => {
+      part(cyl(0.14, 0.16, 0.14, 12), sandM, g, px, 0.50, 0.04);
+      part(cyl(0.10, 0.12, 2.08, 14), marble, g, px, 1.56, 0.04);
+      part(geo('stele-ring', () => new THREE.TorusGeometry(0.125, 0.024, 6, 14)), K.gold, g, px, 1.56, 0.04).rotation.x = Math.PI / 2;
+      part(cyl(0.15, 0.11, 0.14, 12), sandM, g, px, 2.58, 0.04);
+    });
+    part(box(1.68, 0.18, 0.56), sandM, g, 0, 2.72, 0.02);
+    const arch = part(geo('stele-arch', () => new THREE.CylinderGeometry(0.64, 0.64, 0.42, 18, 1, false, -Math.PI / 2, Math.PI)), marble, g, 0, 2.78, 0.02);
+    arch.rotation.z = Math.PI / 2; arch.rotation.y = Math.PI / 2;
+    [-1, 1].forEach((s) => {
+      const rf = part(box(0.92, 0.10, 0.52), sandM, g, s * 0.38, 3.16, 0.02);
+      rf.rotation.z = -s * 0.48;
+    });
+    part(cyl(0.04, 0.08, 0.22, 8), K.gold, g, 0, 3.44, 0.02);
+    part(sphere(0.065, 10, 8), K.gold, g, 0, 3.58, 0.02);
     addObs(W, x, y, 0.95);
   });
-  // 수호 석상
+  // 수호 석상과 다단 석조 좌대
   [[-4, 7.6], [5.2, 7.6]].forEach(([x, y]) => {
-    if (prop(W, 'ph:gothic_statue', x, y, { h: 3.5, y: 0.8, rot: x < 0 ? 0.35 : -0.35, obs: 1.1 })) {
-      part(box(1.55, 0.8, 1.55), sandM, sg(W, x, y), 0, 0.4, 0);
-      return;
-    }
+    const ped = sg(W, x, y);
+    part(box(1.76, 0.24, 1.76), sandM, ped, 0, 0.12, 0);
+    part(box(1.48, 0.44, 1.48), marble, ped, 0, 0.46, 0);
+    part(box(1.62, 0.16, 1.62), sandM, ped, 0, 0.76, 0);
+    if (prop(W, 'ph:gothic_statue', x, y, { h: 3.5, y: 0.84, rot: x < 0 ? 0.35 : -0.35, obs: 1.1 })) return;
     const R = buildHumanoid('captain', { code: true });
     const stone = stdM(0xc6c0b2, 0.85);
     const old = new Set();
     R.root.traverse((o) => { if (o.isMesh) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((mt) => old.add(mt)); o.material = Array.isArray(o.material) ? o.material.map(() => stone) : stone; } });
     old.forEach((mt) => { ['map', 'normalMap', 'emissiveMap'].forEach((k) => { if (mt[k]) { TEX.forEach((v) => { const i = v.users.indexOf(mt[k]); if (i >= 0) v.users.splice(i, 1); }); if (![...TEX.values()].some((v) => v.map === mt[k] || v.normalMap === mt[k] || v.emissiveMap === mt[k])) mt[k].dispose(); } }); mt.dispose(); });
     R.root.scale.setScalar(1.6);
-    const ped = sg(W, x, y);
-    part(box(1.6, 1.0, 1.6), sandM, ped, 0, 0.5, 0);
-    ped.add(R.root); R.root.position.y = 1.0;
+    ped.add(R.root); R.root.position.y = 0.84;
     R.armR.rotation.x = -0.3; R.foreR.rotation.x = -0.6;
     if (R.cape) animCape(R.cape, 0, 0, 0);
     addObs(W, x, y, 1.1);
@@ -11680,31 +11862,49 @@ function buildS4() {
   brazier(W, K, -1.8, 6.9, 1.1); brazier(W, K, 3.2, 6.9, 1.1); brazier(W, K, -10.5, 1.5, 1); brazier(W, K, 11.5, 2, 1);
   pLight(W, w2(0.7, 7, 2.4), 0xffa040, 9, 11, { flicker: true });
   [[-12, 5.5], [12.5, 6]].forEach(([x, y]) => { const g = sg(W, x, y); part(cyl(1.0, 1.1, 0.7, 16), sandM, g, 0, 0.35, 0); tree(W, K, x, y, 0.8, true); });
-  // 펼쳐진 거대 고서적과 고딕 성소 제단: 쪽이 천천히 넘어간다 (한글 법령 제목 제거, 고딕 필사본 양피지)
+  // 펼쳐진 거대 고서적과 고딕 성소 독서대(Cathedral Lectern): 8각 다단 제단과 대리석 기둥, 황동 받침대, 양피지 필사본
   {
     const g = sg(W, 0.6, 6.2);
-    part(box(3.4, 0.22, 2.4), sandM, g, 0, 0.11, 0);
-    part(box(2.6, 0.22, 1.8), marble, g, 0, 0.33, 0);
-    part(box(1.6, 0.9, 1.0), sandM, g, 0, 0.78, 0);
-    part(box(1.76, 0.12, 1.16), K.gold, g, 0, 1.24, 0);
-    const pageTex = canvasTex(256, 320, (c, w, h) => {
-      c.fillStyle = '#9c8d72'; c.fillRect(0, 0, w, h);
-      c.strokeStyle = '#5c4628'; c.lineWidth = 5; c.strokeRect(14, 14, w - 28, h - 28);
-      c.fillStyle = '#6e2018'; c.fillRect(28, 28, 44, 44);
-      c.fillStyle = '#c4a258'; c.fillRect(34, 34, 32, 32);
+    part(cyl(1.88, 2.04, 0.18, 8), sandM, g, 0, 0.09, 0);
+    part(cyl(1.46, 1.60, 0.18, 8), marble, g, 0, 0.27, 0);
+    part(geo('altar-oct-rim', () => new THREE.TorusGeometry(1.48, 0.032, 6, 8)), K.gold, g, 0, 0.36, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.62, 0.72, 0.18, 12), sandM, g, 0, 0.45, 0);
+    part(cyl(0.42, 0.50, 0.64, 16), marble, g, 0, 0.82, 0);
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU + Math.PI / 4;
+      part(box(0.16, 0.58, 0.34), sandM, g, Math.cos(a) * 0.46, 0.78, Math.sin(a) * 0.46).rotation.y = -a;
+    }
+    part(geo('lectern-ring', () => new THREE.TorusGeometry(0.48, 0.045, 8, 20)), K.gold, g, 0, 1.12, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.68, 0.46, 0.16, 12), sandM, g, 0, 1.20, 0);
+    const pageTex = canvasTex(512, 640, (c, w, h) => {
+      c.fillStyle = '#a49478'; c.fillRect(0, 0, w, h);
+      c.fillStyle = 'rgba(56,38,20,0.16)'; c.fillRect(0, 0, 36, h); c.fillRect(w - 36, 0, 36, h);
+      c.strokeStyle = '#5c4628'; c.lineWidth = 8; c.strokeRect(26, 26, w - 52, h - 52);
+      c.strokeStyle = '#8a6c3e'; c.lineWidth = 3; c.strokeRect(38, 38, w - 76, h - 76);
+      c.fillStyle = '#6e2018'; c.fillRect(56, 56, 88, 88);
+      c.fillStyle = '#c4a258'; c.fillRect(68, 68, 64, 64);
       c.fillStyle = '#443420';
-      for (let i = 0; i < 3; i++) c.fillRect(82, 32 + i * 14, w - 110, 5);
-      for (let i = 0; i < 9; i++) c.fillRect(28, 92 + i * 22, (0.55 + ((i * 31) % 10) * 0.038) * (w - 56), 5);
+      for (let i = 0; i < 3; i++) c.fillRect(164, 64 + i * 28, w - 220, 10);
+      for (let i = 0; i < 10; i++) c.fillRect(56, 184 + i * 40, (0.55 + ((i * 31) % 10) * 0.038) * (w - 112), 9);
     });
-    const pm = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.92, side: THREE.DoubleSide });
-    const cover = stdM(0x3e1612, 0.78);
-    const book = grp(g, 0, 1.34, 0);
-    book.rotation.x = -0.35;
-    part(box(1.9, 0.08, 1.3), cover, book, 0, -0.04, 0);
-    const lp = part(new THREE.PlaneGeometry(0.88, 1.2), pm, book, -0.46, 0.02, 0); lp.rotation.x = -Math.PI / 2;
-    const rp = part(new THREE.PlaneGeometry(0.88, 1.2), pm, book, 0.46, 0.02, 0); rp.rotation.x = -Math.PI / 2;
-    const flip = grp(book, 0, 0.03, 0);
-    const fp = part(new THREE.PlaneGeometry(0.88, 1.2), pm, flip, 0.45, 0, 0); fp.rotation.x = -Math.PI / 2;
+    const pm = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.9, side: THREE.DoubleSide });
+    const cover = stdM(0x421814, 0.72);
+    const pageEdge = stdM(0xbaab8e, 0.88);
+    const book = grp(g, 0, 1.36, 0);
+    book.rotation.x = -0.36;
+    // 황동 독서대 받침판과 아랫단 책 받침 턱, 가죽 표지·책등·금속 모서리 장식
+    part(box(2.04, 0.06, 1.42), K.wood, book, 0, -0.09, 0);
+    part(box(2.08, 0.10, 0.08), K.gold, book, 0, -0.04, 0.68);
+    [-1.02, 1.02].forEach((bx) => part(cyl(0.045, 0.045, 1.44, 10), K.gold, book, bx, -0.07, 0).rotation.x = Math.PI / 2);
+    part(box(1.92, 0.06, 1.32), cover, book, 0, -0.03, 0);
+    part(cyl(0.08, 0.08, 1.34, 12), cover, book, 0, -0.02, 0).rotation.x = Math.PI / 2;
+    [-0.48, -0.24, 0, 0.24, 0.48].forEach((bz) => part(cyl(0.092, 0.092, 0.03, 12), K.gold, book, 0, -0.02, bz).rotation.x = Math.PI / 2);
+    [[-0.90, -0.60], [0.90, -0.60], [-0.90, 0.60], [0.90, 0.60]].forEach(([cx, cz]) => part(box(0.14, 0.075, 0.14), K.gold, book, cx, -0.025, cz));
+    [-0.46, 0.46].forEach((px) => part(box(0.86, 0.055, 1.20), pageEdge, book, px, 0.015, 0));
+    const lp = part(new THREE.PlaneGeometry(0.86, 1.18), pm, book, -0.46, 0.048, 0); lp.rotation.x = -Math.PI / 2;
+    const rp = part(new THREE.PlaneGeometry(0.86, 1.18), pm, book, 0.46, 0.048, 0); rp.rotation.x = -Math.PI / 2;
+    const flip = grp(book, 0, 0.054, 0);
+    const fp = part(new THREE.PlaneGeometry(0.86, 1.18), pm, flip, 0.45, 0, 0); fp.rotation.x = -Math.PI / 2;
     flip.userData.dyn = true; lp.userData.dyn = true; rp.userData.dyn = true; fp.userData.dyn = true;
     W.updaters.push((dt, t) => { const u = (t % 6) / 6; flip.rotation.z = u < 0.35 ? (u / 0.35) * Math.PI : u < 0.5 ? Math.PI : 0; flip.visible = u < 0.5; });
     const bp = w2(0.6, 6.2, 1.7);
@@ -11766,7 +11966,8 @@ function buildRift() {
   W.bounds = [-13.5, 14, -9.5, 10];
   groundPlane(W, emit(W, texMat('rift', 512, 9, { roughness: 0.85, emissiveIntensity: 0.35 }), 'env', 0.42), 46);
   courtSurface(W, 32, 25);
-  const rock = stdM(0x2a2630, 0.9, 0, { flatShading: true });
+  const rock = stdM(0x2a2630, 0.9);
+  surfUpgrade(rock, 'castle', 2, 2, { tint: 0x3e364c });
   const cry = [0xc8a8ff, 0x8cc4ff, 0xe8a8e0];
   // 결정은 덜 반들거리게 (해의 반짝임이 몬스터보다 밝은 점이 되지 않게)
   const cryM = cry.map((c) => { const m = crysM(c, 0.5); m.roughness = 0.38; return emit(W, m); });
@@ -11817,34 +12018,62 @@ function buildRift() {
     });
   }
   // 균열의 흑요석 차원문과 무너진 고딕 성소 기둥열 (D2R 혼돈의 성역 풍경)
-  const obsStone = stdM(0x3a3246, 0.88), colStone = stdM(0x484056, 0.82);
+  const obsStone = stdM(0x3a3246, 0.88), colStone = stdM(0x484056, 0.82), voidBrass = stdM(0x78688a, 0.38, 0.88);
   surfUpgrade(obsStone, 'castle', 2, 1, { tint: 0x423950 });
   surfUpgrade(colStone, 'blocks', 1, 2, { tint: 0x4c435c });
+  surfUpgrade(voidBrass, 'rusty', 1, 1, { tint: 0x86749a, metal: true });
   {
     const g = sg(W, 0.2, 10.2);
-    part(box(6.4, 0.35, 2.6), obsStone, g, 0, 0.18, 0);
-    part(box(5.2, 0.35, 2.0), obsStone, g, 0, 0.52, 0);
-    [-2.3, 2.3].forEach((px, i) => {
-      part(box(0.95, 4.6, 0.95), colStone, g, px, 2.8, 0);
-      part(box(1.15, 0.38, 1.15), obsStone, g, px, 5.2, 0);
-      const cr = part(geo('rcry', () => new THREE.OctahedronGeometry(0.4)), fcry[i % 3], g, px, 5.85, 0);
-      cr.scale.set(0.85, 1.9, 0.85);
+    part(box(6.6, 0.28, 2.8), obsStone, g, 0, 0.14, 0);
+    part(box(5.6, 0.28, 2.2), colStone, g, 0, 0.42, 0);
+    part(box(4.8, 0.22, 1.7), obsStone, g, 0, 0.66, 0);
+    [-2.35, 2.35].forEach((px, i) => {
+      part(box(1.28, 0.38, 1.28), obsStone, g, px, 0.92, 0);
+      part(box(0.96, 4.4, 0.96), colStone, g, px, 3.1, 0);
+      [[-0.48, 0.48], [0.48, 0.48], [-0.48, -0.48], [0.48, -0.48]].forEach(([cx, cz]) => part(cyl(0.14, 0.16, 4.4, 10), obsStone, g, px + cx, 3.1, cz));
+      [2.0, 4.1].forEach((hy) => part(box(1.18, 0.16, 1.18), voidBrass, g, px, hy, 0));
+      part(box(1.34, 0.36, 1.34), obsStone, g, px, 5.38, 0);
+      const cr = part(geo('rcry', () => new THREE.OctahedronGeometry(0.4)), fcry[i % 3], g, px, 6.12, 0);
+      cr.scale.set(0.85, 2.0, 0.85);
     });
-    part(box(5.6, 0.55, 1.1), obsStone, g, 0, 5.55, 0);
-    prop(W, 'ph:large_iron_gate', 0.2, 10.3, { s: 1.45, y: 0.68, tint: 0x524864 });
+    part(box(6.0, 0.48, 1.24), obsStone, g, 0, 5.68, 0);
+    const gateArch = part(geo('rift-gate-arch', () => new THREE.CylinderGeometry(2.2, 2.2, 0.86, 24, 1, false, -Math.PI / 2, Math.PI)), colStone, g, 0, 4.8, 0);
+    gateArch.rotation.z = Math.PI / 2; gateArch.rotation.y = Math.PI / 2;
+    [-1, 1].forEach((s) => {
+      const rf = part(box(3.2, 0.24, 1.32), obsStone, g, s * 1.42, 6.28, 0);
+      rf.rotation.z = -s * 0.32;
+    });
+    const topCr = part(geo('rcry', () => new THREE.OctahedronGeometry(0.45)), fcry[2], g, 0, 7.25, 0);
+    topCr.scale.set(0.95, 2.2, 0.95);
+    prop(W, 'ph:large_iron_gate', 0.2, 10.3, { s: 1.45, y: 0.72, tint: 0x524864 });
     addObs(W, -2.1, 10.2, 0.9); addObs(W, 2.5, 10.2, 0.9);
   }
   [[-5.4, 8.8], [5.8, 8.8]].forEach(([x, y]) => {
     const ped = sg(W, x, y);
-    part(box(1.5, 0.85, 1.5), obsStone, ped, 0, 0.42, 0);
-    prop(W, 'ph:gothic_statue', x, y, { h: 3.4, y: 0.85, rot: x < 0 ? 0.38 : -0.38, tint: 0x564c68, obs: 1.05 });
+    part(box(1.72, 0.26, 1.72), obsStone, ped, 0, 0.13, 0);
+    part(box(1.44, 0.44, 1.44), colStone, ped, 0, 0.48, 0);
+    part(box(1.58, 0.18, 1.58), voidBrass, ped, 0, 0.78, 0);
+    prop(W, 'ph:gothic_statue', x, y, { h: 3.4, y: 0.86, rot: x < 0 ? 0.38 : -0.38, tint: 0x564c68, obs: 1.05 });
   });
   [[-10.6, 7.8, 3.6], [10.8, 7.8, 4.1], [-12.2, 2.2, 2.5], [12.4, 2.0, 2.9], [-11.4, -5.8, 2.1], [11.6, -5.6, 2.6]].forEach(([x, y, h], i) => {
     const g = sg(W, x, y, i * 0.7);
-    part(box(1.15, 0.45, 1.15), obsStone, g, 0, 0.22, 0);
-    part(cyl(0.42, 0.48, h, 14), colStone, g, 0, 0.45 + h / 2, 0);
+    part(box(1.24, 0.24, 1.24), obsStone, g, 0, 0.12, 0);
+    part(cyl(0.54, 0.60, 0.22, 16), obsStone, g, 0, 0.34, 0);
+    part(geo('rift-col-ring', () => new THREE.TorusGeometry(0.47, 0.04, 6, 20)), voidBrass, g, 0, 0.46, 0).rotation.x = Math.PI / 2;
+    const cg = new THREE.CylinderGeometry(0.40, 0.46, h, 20, 4);
+    const p = cg.attributes.position, depth = Math.min(0.65, h * 0.22), seed = i * 41 + 17;
+    for (let k = 0; k < p.count; k++) {
+      if (p.getY(k) < h / 2 - 0.01) continue;
+      const vx = p.getX(k), vz = p.getZ(k), chip = hash2(Math.round(vx * 100), Math.round(vz * 100), seed);
+      p.setY(k, h / 2 - depth * (0.35 + 0.65 * vx + 0.35 * chip));
+    }
+    cg.computeVertexNormals();
+    part(cg, colStone, g, 0, 0.45 + h / 2, 0);
+    part(geo('rift-col-band', () => new THREE.TorusGeometry(0.44, 0.036, 6, 20)), voidBrass, g, 0, 0.45 + h * 0.48, 0).rotation.x = Math.PI / 2;
     const shard = part(geo('rcry', () => new THREE.OctahedronGeometry(0.4)), cryM[i % 3], g, 0, 0.95 + h, 0);
-    shard.scale.set(0.65, 1.6, 0.65);
+    shard.scale.set(0.68, 1.65, 0.68);
+    shard.userData.dyn = true;
+    W.updaters.push((dt, t) => { shard.rotation.y += dt * 0.7; shard.position.y = 0.95 + h + Math.sin(t * 1.4 + i) * 0.12; });
     addObs(W, x, y, 0.85);
   });
   [[-12.8, -2.2], [12.8, -2.0], [-9.4, 8.8], [9.8, 8.8]].forEach(([x, y], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: `rock0${(i % 5) + 1}`, rot: i * 1.3, s: 1.35, tint: 0x3e364c, obs: 0.95 }));
@@ -11860,29 +12089,59 @@ function buildRift() {
 // ---------- NPC와 마을 주민 ----------
 function buildBoard() {
   const R = { kind: 'board', root: new THREE.Group(), mats: {}, akey: 'board' };
-  const wood = texMatR('wood', 256, [1, 2], { roughness: 0.84, color: new THREE.Color(0x9e7b56) }), dk = stdM(0x5c4228, 0.86), iron = stdM(0x3a3e44, 0.5, 0.8);
-  [-0.95, 0.95].forEach((x) => {
-    part(box(0.16, 2.38, 0.16), wood, R.root, x, 1.19, 0);
-    part(box(0.24, 0.28, 0.24), iron, R.root, x, 0.14, 0);
-    part(box(0.18, 0.12, 0.18), iron, R.root, x, 1.92, 0);
+  const stone = texMatR('brick', 256, [1, 1], { roughness: 0.92 }, { seed: 9, a: [84, 78, 70], b: [120, 112, 100] });
+  const wood = texMatR('wood', 256, [1, 2], { roughness: 0.82, color: new THREE.Color(0x9e7b56) });
+  const dk = texMatR('wood', 256, [2, 1], { roughness: 0.86, color: new THREE.Color(0x583e26) });
+  const iron = stdM(0x363a40, 0.46, 0.84), brass = stdM(0xb8964c, 0.36, 0.9);
+  [-0.98, 0.98].forEach((x) => {
+    const s = x < 0 ? -1 : 1;
+    // 2단 석조 초석과 무쇠 기둥 밑동·꺾쇠
+    part(box(0.42, 0.14, 0.42), stone, R.root, x, 0.07, 0);
+    part(box(0.32, 0.20, 0.32), stone, R.root, x, 0.24, 0);
+    part(box(0.23, 0.22, 0.23), iron, R.root, x, 0.42, 0);
+    part(box(0.18, 2.15, 0.18), wood, R.root, x, 1.38, 0);
+    part(box(0.21, 0.10, 0.21), iron, R.root, x, 0.84, 0);
+    part(box(0.21, 0.10, 0.21), iron, R.root, x, 2.14, 0);
+    // 처마를 받치는 대각선 나무 까치발(knee brace)
+    const br = part(box(0.10, 0.52, 0.11), dk, R.root, x - s * 0.22, 2.02, 0);
+    br.rotation.z = s * 0.68;
   });
-  part(box(2.14, 1.32, 0.1), wood, R.root, 0, 1.5, 0);
-  part(box(2.22, 0.09, 0.14), dk, R.root, 0, 2.16, 0);
-  part(box(2.22, 0.09, 0.14), dk, R.root, 0, 0.84, 0);
-  part(box(2.44, 0.09, 0.58), dk, R.root, 0, 2.32, 0.04).rotation.x = 0.28;
-  const paper = canvasTex(128, 160, (g, w, h) => {
-    g.fillStyle = '#baa682'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = '#6e5838'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+  // 몸통 널빤지와 오목한 테두리 액자, 무쇠 모서리 띠
+  part(box(2.12, 1.30, 0.10), wood, R.root, 0, 1.50, 0);
+  part(box(2.26, 0.11, 0.16), dk, R.root, 0, 2.16, 0);
+  part(box(2.26, 0.11, 0.16), dk, R.root, 0, 0.84, 0);
+  [-0.90, 0.90].forEach((x) => part(box(0.09, 1.24, 0.14), dk, R.root, x, 1.50, 0));
+  [[-0.94, 2.16], [0.94, 2.16], [-0.94, 0.84], [0.94, 0.84]].forEach(([x, y]) => {
+    part(box(0.26, 0.07, 0.18), iron, R.root, x, y, 0);
+    part(sphere(0.022, 6, 4), brass, R.root, x, y, 0.095);
+  });
+  // 고딕 박공지붕(pitched roof)과 용마루·황동 첨탑 장식
+  [-1, 1].forEach((s) => {
+    const rf = part(box(1.38, 0.08, 0.68), dk, R.root, s * 0.62, 2.42, 0.04);
+    rf.rotation.z = -s * 0.30;
+    rf.rotation.x = 0.08;
+  });
+  part(box(2.58, 0.10, 0.14), iron, R.root, 0, 2.62, 0.04);
+  part(cyl(0.02, 0.05, 0.24, 8), iron, R.root, 0, 2.78, 0.04);
+  part(sphere(0.042, 8, 6), brass, R.root, 0, 2.91, 0.04);
+  const paper = canvasTex(256, 320, (g, w, h) => {
+    g.fillStyle = '#bca782'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(60,42,24,0.14)'; g.fillRect(0, 0, w, 28); g.fillRect(0, h - 24, w, 24);
+    g.strokeStyle = '#685032'; g.lineWidth = 8; g.strokeRect(8, 8, w - 16, h - 16);
+    g.strokeStyle = '#8c6e46'; g.lineWidth = 3; g.strokeRect(18, 18, w - 36, h - 36);
+    g.fillStyle = '#5c1a14'; g.fillRect(30, 32, w - 60, 14);
     g.fillStyle = '#2d2014';
-    for (let i = 0; i < 7; i++) g.fillRect(14, 26 + i * 16, (0.5 + ((i * 37) % 10) * 0.04) * (w - 28), 4);
-    g.fillStyle = '#7c1c16'; g.beginPath(); g.arc(w - 26, h - 26, 11, 0, TAU); g.fill();
+    for (let i = 0; i < 8; i++) g.fillRect(30, 66 + i * 24, (0.48 + ((i * 37) % 10) * 0.048) * (w - 60), 7);
+    g.fillStyle = '#841c16'; g.beginPath(); g.arc(w - 52, h - 50, 22, 0, TAU); g.fill();
+    g.strokeStyle = '#b88642'; g.lineWidth = 3; g.beginPath(); g.arc(w - 52, h - 50, 15, 0, TAU); g.stroke();
   });
-  const pm = new THREE.MeshStandardMaterial({ map: paper, roughness: 0.92 });
-  [[-0.6, 1.62, 0.08], [0.05, 1.5, -0.05], [0.62, 1.66, 0.06], [-0.25, 1.28, -0.09], [0.45, 1.25, 0.04]].forEach(([x, y, r]) => {
-    const p = part(geo('paper', () => new THREE.PlaneGeometry(0.42, 0.52)), pm, R.root, x, y, 0.058);
-    p.rotation.z = r;
+  const pm = new THREE.MeshStandardMaterial({ map: paper, roughness: 0.9 });
+  [[-0.58, 1.62, 0.07, 1], [0.04, 1.50, -0.04, 1.06], [0.60, 1.64, 0.05, 0.95], [-0.26, 1.24, -0.08, 0.9], [0.44, 1.22, 0.04, 0.92]].forEach(([x, y, r, sc]) => {
+    const p = part(geo('paper', () => new THREE.PlaneGeometry(0.42, 0.52)), pm, R.root, x, y, 0.056);
+    p.rotation.z = r; p.scale.setScalar(sc);
+    part(sphere(0.018, 6, 4), brass, R.root, x, y + 0.21 * sc, 0.062);
   });
-  R.height = 2.45;
+  R.height = 2.85;
   return R;
 }
 const NPC_KIND = { wizard: 'wizard', healer: 'healer', smith: 'smith', captain: 'captain' };
