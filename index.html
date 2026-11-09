@@ -9194,7 +9194,8 @@ const PROP_S = 0.85;
 const PACK_FLOOR = {
   s1: [['map', 'floor/slab_tiles_diff.jpg', true], ['normalMap', 'floor/slab_tiles_nor.jpg'], ['arm', 'floor/slab_tiles_arm.jpg']],
   s3: [['map', 'floor/metal_plate_diff.jpg', true], ['normalMap', 'floor/metal_plate_nor.jpg'], ['arm', 'floor/metal_plate_arm.jpg']],
-  s4: [['map', 'floor/stone_tiles_02_diff.jpg', true], ['normalMap', 'floor/stone_tiles_02_nor.jpg'], ['arm', 'floor/stone_tiles_02_arm.jpg']],
+  s4: [['map', 'floor/stone_tiles_02_diff.jpg', true], ['normalMap', 'floor/stone_tiles_nor.jpg'.replace('_nor', '_02_nor')], ['arm', 'floor/stone_tiles_02_arm.jpg']],
+  drock: PACK_S2.rock,
 };
 // 구조물 질감 (Poly Haven, assets/tex): 벽·기둥·건물을 단순한 형상에 사진 질감을 입혀 짓는다. surfUpgrade(재질, 열쇠, 반복…)
 const TEX_ID = { castle: 'castle_wall_slates', blocks: 'medieval_blocks_02', rusty: 'rusty_metal_02', dbrick: 'dark_brick_wall', grate: 'metal_grate_rusty',
@@ -9205,7 +9206,7 @@ const PROP_LOAD = (() => {
   const L = new GLTFLoader();
   const models = Promise.all(PROP_Q.map((n) => L.loadAsync(`${ASSET_BASE}props/${n}.json`).then((g) => { PROP.gl[n] = g.scene; }, () => {}))
     .concat(PROP_PH.map((n) => L.loadAsync(`${ASSET_BASE}ph/${n}.json`).then((g) => { PROP.gl[`ph:${n}`] = g.scene; }, () => {}))));
-  const floors = Promise.all(Object.entries(PACK_FLOOR).map(([k, l]) => assetPack(`floor-${k}`, l)));
+  const floors = Promise.all(Object.entries(PACK_FLOOR).map(([k, l]) => assetPack(`floor-${k}`, l).then((t) => [k, t]))).then(Object.fromEntries);
   const art = Promise.all(Object.entries({ basin: 'spr/town_basin', plaza: 'tex/town_plaza', oak: 'spr/oak',
     lamp: 'spr/iron_lamp', shards: 'spr/shards', rift: 'tex/rift_ground', s1: 'tex/s1_court', s3: 'tex/s3_court', s4: 'tex/s4_court' }).map(
     // 한 장짜리 그림이라 가장자리를 반복하지 않는다 (반복이면 선형 거르기에서 반대쪽 끝이 테두리에 비친다)
@@ -9213,15 +9214,28 @@ const PROP_LOAD = (() => {
   ));
   return Promise.all([models, floors, art]).then(propPrep, () => {});
 })();
-function propPrep() {
+function propPrep([, fl] = []) {
+  const dr = fl && fl.drock;
   Object.entries(PROP.gl).forEach(([n, sc]) => {
     sc.updateMatrixWorld(true);
     PROP.size[n] = new THREE.Box3().setFromObject(sc);
+    const isRockSet = n === 'ph:rock_moss_set_01', isRock7 = n === 'ph:rock_07';
     sc.traverse((o) => {
       if (!o.isMesh) return;
       o.geometry.userData.shared = true;
       ASSET_GEO.add(o.geometry);
       const m = o.material;
+      if (dr && (isRockSet || isRock7)) {
+        const rep = isRockSet ? 3.5 : 1.6;
+        m.map = assetRep(dr.map, rep, rep);
+        m.normalMap = assetRep(dr.normalMap, rep, rep);
+        m.roughnessMap = m.metalnessMap = assetRep(dr.arm, rep, rep);
+        m.color.setHex(0xb8b2a6);
+        m.roughness = 0.92;
+        m.metalness = 0;
+        if (m.normalScale) m.normalScale.set(1.15, 1.15);
+        m.needsUpdate = true;
+      }
       m.userData.skinKey = `prop|${n}|${o.name}`;
       ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap'].forEach((k) => { if (m[k]) { m[k].anisotropy = maxAniso; ASSET_TEX.add(m[k]); } });
     });
@@ -9243,16 +9257,16 @@ function prop(W, n, sx, sy, o = {}) {
   const T = new THREE.Object3D();
   setW(T, sx, sy, o.y || 0);
   T.rotation.y = FACE + (o.rot || 0);
-  const b = PROP.size[n], s = o.h ? o.h / Math.max(1e-4, b.max.y - b.min.y) : (o.s || (n.startsWith('ph:') ? 1 : PROP_S)) * (n.startsWith('ph:') ? PH_S : 1);
+  const nb = o.node ? new THREE.Box3() : null;
+  if (nb) src.traverse((m) => { if (m.isMesh && m.name.includes(o.node)) nb.expandByObject(m); });
+  const b = nb && !nb.isEmpty() ? nb : PROP.size[n];
+  const s = o.h ? o.h / Math.max(1e-4, b.max.y - b.min.y) : (o.s || (n.startsWith('ph:') ? 1 : PROP_S)) * (n.startsWith('ph:') ? PH_S : 1);
   T.scale.setScalar(s);
   // 받은 모델의 바닥(가장 낮은 점)을 땅에 (KayKit 깃발·횃불처럼 원점이 위에 있는 것은 o.keepY로 원점 그대로)
   // 묶음에서 하나(o.node)를 고르면 그 조각의 상자로 가운데와 바닥을 다시 잡는다 (조각은 묶음 안에서 옆으로 늘어서 있다)
   const C = new THREE.Matrix4();
-  if (o.node) {
-    const nb = new THREE.Box3();
-    src.traverse((m) => { if (m.isMesh && m.name.includes(o.node)) nb.expandByObject(m); });
-    if (!nb.isEmpty()) C.makeTranslation(-(nb.min.x + nb.max.x) / 2, -nb.min.y, -(nb.min.z + nb.max.z) / 2);
-  } else if (!o.keepY) T.position.y += -b.min.y * s;
+  if (nb && !nb.isEmpty()) C.makeTranslation(-(nb.min.x + nb.max.x) / 2, -nb.min.y, -(nb.min.z + nb.max.z) / 2);
+  else if (!o.keepY) T.position.y += -b.min.y * s;
   T.updateMatrix();
   T.matrix.multiply(C);
   const out = [];
@@ -11114,14 +11128,15 @@ function buildTown() {
   [[-18, -5], [18.5, 3.5], [-18.5, 7], [19, -4]].forEach(([x, y]) => pine(W, K, x, y, 1.2));
   const inPlaza = (x, y) => Math.hypot(x, y - 1) < 9.8 || (Math.abs(x - 1.5) < 2.4 && y > 8) || Math.abs(y - 0.5) < 1.8 && x < -9 || Math.abs(y + 3.5) < 1.8 && x > 9 || (Math.abs(x) < 1.8 && y < -8);
   tufts(W, 520, [-20, 20, -16, 13], [0x4a5632, 0x56603a, 0x3e4a2a, 0x6a6a44], inPlaza);
-  // 이끼 낀 바위 무리와 사냥터 이정표 (원색 꽃밭 대신 디아블로풍 야영지 바위와 수풀)
+  // 풍화된 바위 군락과 사냥터 이정표 (마을 외곽 풀밭 경계에 배치하고 충돌 반경을 두어 캐릭터가 밟고 지나가지 않게 한다)
   {
-    [[-6.6, -7.8, 'rock01', 1.15], [6.6, -7.8, 'rock02', 1.1], [-10.0, 4.8, 'rock03', 0.95], [11.0, 2.6, 'rock01', 0.9], [-4.8, 10.6, 'rock02', 0.95]].forEach(([x, y, nd, s], i) => {
-      if (!prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, s, rot: i * 1.3, shadow: false })) {
+    [[-9.8, -8.4, 'rock01', 0.78], [8.4, -8.2, 'rock02', 0.74], [-11.8, 5.4, 'rock03', 0.72], [12.6, -6.8, 'rock04', 0.76], [-11.0, 10.2, 'rock05', 0.74]].forEach(([x, y, nd, h], i) => {
+      if (!prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, h, rot: i * 1.3, obs: 0.95 })) {
         const g = sg(W, x, y, i * 1.1);
-        part(rockGeo(0.55 * s, i), K.stoneDark, g, 0, 0.18, 0).scale.set(1.2, 0.65, 1.0);
+        part(rockGeo(0.55 * h, i), K.stoneDark, g, 0, 0.22, 0).scale.set(1.2, 0.65, 1.0);
+        addObs(W, x, y, 0.95);
       }
-      if (i % 2 === 0) prop(W, 'ph:rock_07', x + 0.75, y - 0.35, { s: 0.65, rot: i * 2.1, shadow: false });
+      prop(W, 'ph:rock_07', x + 0.62, y - 0.28, { h: h * 0.52, rot: i * 2.1, obs: 0.48 });
     });
     const sign = sg(W, 4.7, 7.8, -0.3);
     part(cyl(0.24, 0.28, 0.18, 8), K.stoneDark, sign, 0, 0.09, 0);
@@ -11323,8 +11338,8 @@ function buildS1() {
   }
   [[-5.2, 10.6], [5.4, 10.6]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 3.3, s: 1.35, shadow: false }));
   [[-10.4, 11.1, 0], [10.0, 11.1, 0]].forEach(([x, y, r]) => prop(W, 'ph:kite_shield', x, y, { y: 2.3, rot: r, s: 1.15, shadow: false }));
-  [[-11.8, 6.2, 'rock01'], [11.8, 6.5, 'rock02'], [-11.4, -6.5, 'rock03']].forEach(([x, y, nd], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, rot: i * 1.7, s: 1.25, obs: 0.9 }));
-  prop(W, 'ph:rock_07', 11.4, -6.6, { rot: 0.9, s: 1.15, obs: 0.85 });
+  [[-11.8, 6.2, 'rock01'], [11.8, 6.5, 'rock02'], [-11.4, -6.5, 'rock03']].forEach(([x, y, nd], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, rot: i * 1.7, h: 0.95, obs: 0.95 }));
+  prop(W, 'ph:rock_07', 11.4, -6.6, { rot: 0.9, h: 0.72, obs: 0.85 });
   // 전투 화면에 걸리는 둘레(몬스터 자리와 기존 장애물 밖)에도 서가와 촛대를 둔다
   [[-6.0, 7.6, 0.2], [6.0, 7.4, -0.2]].forEach(([x, y, r]) => prop(W, 'ph:wooden_bookshelf_worn', x, y, { rot: r, obs: 0.8 }));
   [[-7.2, 1.9], [9.0, -1.4], [-4.0, -6.8], [6.8, -6.9], [-0.8, -6.6], [-6.4, -3.4]].forEach(([x, y], i) => prop(W, i % 3 ? 'ph:wooden_lantern_01' : 'ph:wooden_bucket_01', x, y, { rot: rand(0, TAU), shadow: false }));
@@ -11506,8 +11521,8 @@ function buildS2() {
   [[-4.4, 8.8], [5.8, 8.4]].forEach(([x, y], i) => {
     if (prop(W, 'ph:stone_fire_pit', x, y, { s: 1.35, rot: i * 1.4, obs: 0.95 })) fire(W, w2(x, y, 0.45), 0.55);
   });
-  [[-11.8, 3.4, 'rock01'], [11.8, 4.2, 'rock02'], [-11.4, -3.6, 'rock03']].forEach(([x, y, nd], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, rot: i * 1.9, s: 1.35, mat: vRockTint, matKey: 's2vrock', obs: 1.0 }));
-  prop(W, 'ph:rock_07', 11.5, -2.8, { rot: 2.2, s: 1.25, mat: vRockTint, matKey: 's2vrock7', obs: 0.95 });
+  [[-11.8, 3.4, 'rock01'], [11.8, 4.2, 'rock02'], [-11.4, -3.6, 'rock03']].forEach(([x, y, nd], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, rot: i * 1.9, h: 1.05, mat: vRockTint, matKey: 's2vrock', obs: 1.0 }));
+  prop(W, 'ph:rock_07', 11.5, -2.8, { rot: 2.2, h: 0.78, mat: vRockTint, matKey: 's2vrock7', obs: 0.95 });
   prop(W, 'ph:old_military_crate', 1.8, 8.4, { rot: 0.35, obs: 0.7 });
   prop(W, 'ph:metal_tool_chest', -7.8, -6.6, { rot: -0.45, obs: 0.65 });
   const charBark = texMatR('bark', 128, [1, 2], { roughness: 0.94, color: new THREE.Color(0x281c16) });
@@ -11946,8 +11961,8 @@ function buildS4() {
   }
   // 받은 소품(view-props): 기둥의 횃불, 무기걸이, 무너진 옆벽, 통, 깃발
   [[-11.8, 1.8, 0.6], [12.2, 1.4, -0.6]].forEach(([x, y, r]) => prop(W, 'ph:kite_shield', x, y, { rot: r, obs: 0.6 }));
-  [[-13.2, -5.6], [-12.6, -2.4], [13.4, -5.2]].forEach(([x, y], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: `rock0${i + 1}`, rot: rand(0, TAU), s: 1.3, obs: 1.0 }));
-  prop(W, 'ph:rock_07', -11.5, -8.4, { rot: 0.3, s: 1.1, shadow: false });
+  [[-13.2, -5.6], [-12.6, -2.4], [13.4, -5.2]].forEach(([x, y], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: `rock0${i + 1}`, rot: rand(0, TAU), h: 0.95, obs: 1.0 }));
+  prop(W, 'ph:rock_07', -11.5, -8.4, { rot: 0.3, h: 0.68, obs: 0.65 });
   // 전투 화면에 걸리는 둘레: 무기걸이, 통, 방패 깃발
   prop(W, 'ph:kite_shield', -6.2, 6.8, { rot: 0.2, obs: 0.6 });
   [[-8.6, -5.4, 'ph:old_military_crate'], [8.4, -5.8, 'ph:wine_barrel_01']].forEach(([x, y, n], i) => prop(W, n, x, y, { rot: i * 1.1, obs: 0.5 }));
@@ -12076,8 +12091,8 @@ function buildRift() {
     W.updaters.push((dt, t) => { shard.rotation.y += dt * 0.7; shard.position.y = 0.95 + h + Math.sin(t * 1.4 + i) * 0.12; });
     addObs(W, x, y, 0.85);
   });
-  [[-12.8, -2.2], [12.8, -2.0], [-9.4, 8.8], [9.8, 8.8]].forEach(([x, y], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: `rock0${(i % 5) + 1}`, rot: i * 1.3, s: 1.35, tint: 0x3e364c, obs: 0.95 }));
-  [[-11.8, -8.2], [12.0, -8.0]].forEach(([x, y], i) => prop(W, 'ph:rock_07', x, y, { rot: i * 1.7, s: 1.15, tint: 0x3a3248, shadow: false }));
+  [[-12.8, -2.2], [12.8, -2.0], [-9.4, 8.8], [9.8, 8.8]].forEach(([x, y], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: `rock0${(i % 5) + 1}`, rot: i * 1.3, h: 1.05, tint: 0x3e364c, obs: 1.0 }));
+  [[-11.8, -8.2], [12.0, -8.0]].forEach(([x, y], i) => prop(W, 'ph:rock_07', x, y, { rot: i * 1.7, h: 0.72, tint: 0x3a3248, obs: 0.65 }));
   [[-3.2, 9.5], [3.6, 9.5]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 4.5, s: 1.2, tint: 0x685c80, obs: 0, shadow: false }));
   groundFog(W, 0x8c8a96, 0.15);
   motes(W, 0xd8c8ff, 8, 15, 4, 0.6);
@@ -12162,7 +12177,7 @@ function spawnNPCs() {
 const VILLAGERS = [
   { tunic: 0x6a7a3a, tunic2: 0x4a5a2a, hairC: 0x2a1a10, path: [[-3.5, -6.2], [2.4, -7.5], [4.3, -6.6], [4.0, -4.6], [3.9, -1.0], [3.8, 5.6], [-3.6, 6.0], [-2.9, 1.0]] },
   { tunic: 0x8a3a2a, tunic2: 0x5a2418, hairC: 0x8a6a3a, hat: 0x6a4a24, path: [[9.5, 1.5], [11.5, -0.5], [12.9, 1.2], [10.6, 2.4]] },
-  { tunic: 0x3a5a8a, tunic2: 0x24385a, hairC: 0x1a1410, path: [[-8.6, -3.2], [-6.5, -6.5], [-2.5, -8.2], [-6.2, -8.4]] },
+  { tunic: 0x3a5a8a, tunic2: 0x24385a, hairC: 0x1a1410, path: [[-8.6, -3.2], [-6.5, -6.5], [-2.5, -8.2], [-5.8, -7.6]] },
   // 시장 좌판 옆에 서 있는 과일 장수 (움직이지 않고 이따금 말만 한다)
   { tunic: 0x8a6a2a, tunic2: 0x5a4418, hairC: 0x3a2414, hat: 0x5a3a1a, name: '과일 장수', path: [[-0.95, 8.3]], lines: ['싱싱한 과일 있어요! 머리 쓰는 데는 당이 최고죠.', '쉬는 것도 공부예요. 물 한 잔 하고 가요.', '오늘 배정은 다 했어요?'] },
 ];
