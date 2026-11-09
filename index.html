@@ -65,24 +65,24 @@ h1, h2, h3, h4 { text-wrap: balance; }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
 
 /* 여러 화면이 같이 쓰는 부품 */
-.bar { height: 7px; background: rgba(0, 0, 0, .55); border: 1px solid rgba(94, 75, 49, .8); border-radius: 2px; overflow: hidden; }
+.bar { height: 7px; background: linear-gradient(180deg, #070504, #14100c); border: 1px solid #000; box-shadow: inset 0 0 0 1px rgba(168, 134, 80, .38); border-radius: 2px; overflow: hidden; }
 .bar > i { display: block; height: 100%; background: linear-gradient(180deg, #b9ef9f, var(--exp)); transition: width .4s ease; }
 .bar.gold > i { background: linear-gradient(180deg, #f7dd98, var(--gold)); }
 .bar.red > i { background: linear-gradient(180deg, #f08a7e, var(--hp)); }
 .c-new { color: var(--new); }
 .c-fix { color: var(--fix); }
-.chip { font-size: 11px; letter-spacing: .03em; color: var(--muted); border: 1px solid var(--edge); border-radius: 2px; padding: 1px 6px; background: rgba(0, 0, 0, .3); white-space: nowrap; }
+.chip { font-size: 11px; letter-spacing: .03em; color: var(--muted); border: 1px solid var(--edge); border-radius: 2px; padding: 1px 6px; background: rgba(10, 8, 6, .55); white-space: nowrap; }
 .muted { color: var(--muted); }
 small { font-size: 12.5px; }
 .note { margin: 10px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.kbd { font-size: 11px; color: var(--muted); border: 1px solid var(--edge); border-radius: 2px; padding: 0 5px; margin-left: 6px; }
+.kbd { font-size: 11px; color: var(--muted); border: 1px solid var(--edge); border-radius: 2px; padding: 0 5px; margin-left: 6px; background: rgba(0, 0, 0, .35); }
 .pill { display: inline-block; font-size: 10.5px; padding: 0 5px; border-radius: 2px; border: 1px solid #8b3b31; color: #ffb3a8; background: rgba(212, 72, 62, .18); }
-.btn { background: linear-gradient(180deg, #3d3125, #241c15); border: 1px solid var(--edge-hi); color: var(--text); padding: 7px 14px; border-radius: 3px; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 230, 190, .12); }
-.btn:hover:not(:disabled) { border-color: var(--gold); color: #fff; }
-.btn.primary { background: linear-gradient(180deg, #8f6c33, #573f1c); border-color: var(--gold); color: #fff7e6; }
-.btn.ghost { background: transparent; border-color: var(--edge); color: var(--muted); }
-.btn[aria-pressed="true"] { background: linear-gradient(180deg, #6b5320, #4a3812); border-color: var(--warn); color: #ffe9bf; }
+.btn { background: linear-gradient(180deg, #34281b, #1d160f 58%, #120d09); border: 1px solid #8a6c3c; color: var(--text); padding: 7px 14px; border-radius: 3px; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 232, 185, .18), inset 0 -1px 0 rgba(0, 0, 0, .65), 0 2px 6px rgba(0, 0, 0, .55); text-shadow: 0 1px 1px #000; }
+.btn:hover:not(:disabled) { border-color: var(--gold); color: #fff; background: linear-gradient(180deg, #483724, #281e14 58%, #18110c); box-shadow: inset 0 1px 0 rgba(255, 238, 198, .26), 0 0 10px rgba(227, 190, 114, .28); }
+.btn.primary { background: linear-gradient(180deg, #987234, #5c4119 58%, #38260d); border-color: var(--gold); color: #fff7e6; box-shadow: inset 0 1px 0 rgba(255, 244, 210, .38), inset 0 -1px 0 rgba(0, 0, 0, .7), 0 2px 8px rgba(0, 0, 0, .65); }
+.btn.ghost { background: rgba(10, 8, 6, .35); border-color: var(--edge); color: var(--muted); box-shadow: none; }
+.btn[aria-pressed="true"] { background: linear-gradient(180deg, #6b5320, #4a3812 60%, #2c2009); border-color: var(--warn); color: #ffe9bf; }
 .btn:disabled { opacity: .45; cursor: default; }
 .soon { font-size: 10.5px; color: var(--muted); margin-left: 5px; }
 .btn.primary .soon { color: #f1dcae; }
@@ -350,14 +350,15 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
 /* 창 */
 .win { position: absolute; top: 12px; right: var(--gr); width: var(--win-w); max-height: calc(100% - 44px); z-index: 30; display: flex; flex-direction: column;
   background:
-    linear-gradient(var(--gold), var(--gold)) 0 0 / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 0 0 / 2px 18px no-repeat,
-    linear-gradient(var(--gold), var(--gold)) 100% 0 / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 100% 0 / 2px 18px no-repeat,
-    linear-gradient(var(--gold), var(--gold)) 0 100% / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 0 100% / 2px 18px no-repeat,
-    linear-gradient(var(--gold), var(--gold)) 100% 100% / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 100% 100% / 2px 18px no-repeat,
-    linear-gradient(180deg, rgba(31, 25, 19, .97), rgba(14, 11, 9, .97)); border: 1px solid #000; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--edge), inset 0 0 0 3px rgba(0, 0, 0, .55), inset 0 0 0 4px rgba(168, 134, 80, .25), 0 18px 40px rgba(0, 0, 0, .6); }
-.win-h { flex: none; position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 12px 9px 26px; background: linear-gradient(180deg, rgba(104, 80, 48, .5), rgba(40, 31, 21, .15)); border-bottom: 1px solid var(--edge); border-radius: 4px 4px 0 0; }
-.win-h::before { content: ""; position: absolute; left: 11px; top: 50%; width: 7px; height: 7px; background: var(--gold); transform: translateY(-50%) rotate(45deg); box-shadow: 0 0 6px rgba(227, 190, 114, .7); }
-.win-h h2 { margin: 0; flex: 1; min-width: 0; font-family: var(--f-display); font-weight: 400; font-size: 21px; line-height: 1.3; color: var(--gold-2); text-shadow: 0 2px 0 #000; }
+    linear-gradient(var(--gold), var(--gold)) 0 0 / 22px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 0 0 / 2px 22px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) 100% 0 / 22px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 100% 0 / 2px 22px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) 0 100% / 22px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 0 100% / 2px 22px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) 100% 100% / 22px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) 100% 100% / 2px 22px no-repeat,
+    radial-gradient(ellipse 90% 45% at 50% 0%, rgba(72, 54, 30, .24), rgba(0, 0, 0, 0) 70%),
+    linear-gradient(180deg, rgba(22, 17, 13, .98), rgba(9, 7, 5, .98)); border: 1px solid #000; border-radius: 4px; box-shadow: inset 0 0 0 1px #785d34, inset 0 0 0 3px #090705, inset 0 0 0 4px rgba(212, 172, 96, .34), inset 0 22px 36px rgba(0, 0, 0, .45), 0 22px 48px rgba(0, 0, 0, .78); }
+.win-h { flex: none; position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 12px 9px 26px; background: linear-gradient(180deg, rgba(84, 62, 34, .62), rgba(32, 23, 14, .82) 60%, rgba(16, 12, 8, .92)); border-bottom: 1px solid #785d34; box-shadow: inset 0 1px 0 rgba(255, 232, 185, .18), 0 2px 6px rgba(0, 0, 0, .5); border-radius: 4px 4px 0 0; }
+.win-h::before { content: ""; position: absolute; left: 11px; top: 50%; width: 8px; height: 8px; background: linear-gradient(135deg, #fff3c8, #c89b44); border: 1px solid #3a2810; transform: translateY(-50%) rotate(45deg); box-shadow: 0 0 8px rgba(227, 190, 114, .75); }
+.win-h h2 { margin: 0; flex: 1; min-width: 0; font-family: var(--f-display); font-weight: 400; font-size: 21px; line-height: 1.3; color: var(--gold-2); text-shadow: 0 2px 0 #000, 0 0 8px rgba(0, 0, 0, .85); }
 .win.new .win-h h2 { color: var(--new); }
 .win.fix .win-h h2 { color: var(--fix); }
 /* 머리 둘째 줄(과락 경보 과목 이름). 버프 줄이 가려지는 폰·낮은 화면에서만 보인다 (아래 미디어 블록) */
@@ -367,7 +368,7 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
 
 /* 창 아래 버튼 줄(문제 창): 높이가 고정이라 답하기 전과 뒤, 기준 시간 글자가 두 줄이 되어도 위 글이 밀리지 않는다.
    답하기 전 [애매함] [신고] [귀환] + 기준 시간, 답한 뒤 [신고] [귀환] + 다음 버튼(#nextBtn). 다음 버튼은 스크롤 없이 늘 보인다 */
-.win-f { flex: none; display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 16px; border-top: 1px solid rgba(168, 134, 80, .3); background: rgba(0, 0, 0, .2); }
+.win-f { flex: none; display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 16px; border-top: 1px solid #68502c; background: linear-gradient(180deg, rgba(12, 9, 7, .75), rgba(6, 5, 4, .9)); box-shadow: inset 0 1px 0 rgba(255, 226, 170, .08); }
 .win-f .fl { display: flex; gap: 8px; min-width: 0; }
 .win-f .btn { white-space: nowrap; }
 .win-f .timer, .win-f #nextBtn { margin-left: auto; }
@@ -445,20 +446,20 @@ body.win-open .mmwrap { width: 118px; height: 118px; }
 .frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .2em 1px; }
 .frac > span:last-child { padding: 1px .2em 0; }
 /* 문제 그림 칸: 누르면 3D 자리에 크게 (#zoom) */
-.qimg { position: relative; display: block; margin: -2px 0 12px; padding: 6px; width: 100%; border: 1px solid var(--edge); border-radius: 2px; background: #0e0c0a; cursor: zoom-in; }
+.qimg { position: relative; display: block; margin: -2px 0 12px; padding: 6px; width: 100%; border: 1px solid #68502c; border-radius: 3px; background: #090706; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .75), 0 2px 6px rgba(0, 0, 0, .45); cursor: zoom-in; }
 .qimg img { display: block; width: 100%; height: 132px; object-fit: contain; }
 .qimg .zi { position: absolute; right: 4px; bottom: 4px; width: 18px; height: 18px; color: var(--muted); }
 .qimg.none { cursor: default; font-size: 12.5px; color: var(--muted); padding: 8px 10px; }
 .choices { display: grid; gap: 7px; }
 .all-choices summary { padding-block: 6px; }
-.answer-pair { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; margin: 0; padding: 8px 10px; border-left: 2px solid var(--gold); background: rgba(0, 0, 0, .25); line-height: 1.55; }
+.answer-pair { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; margin: 0; padding: 8px 10px; border-left: 2px solid var(--gold); background: rgba(0, 0, 0, .34); line-height: 1.55; }
 .answer-pair dt { font-weight: 600; }
 .answer-pair dd { margin: 0; min-width: 0; }
 .answer-pair :nth-child(-n+2) { color: var(--muted); }
 .answer-pair dt:last-of-type { color: var(--gold-2); }
-.choice { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: center; text-align: left; width: 100%; padding: 8px 12px 8px 8px; background: linear-gradient(180deg, rgba(52, 42, 31, .9), rgba(24, 19, 15, .9)); border: 1px solid var(--edge); border-radius: 3px; cursor: pointer; font-size: 15px; line-height: 1.5; box-shadow: inset 0 1px 0 rgba(255, 230, 190, .07); }
-.choice .no { position: relative; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--edge-hi); border-radius: 3px; background: radial-gradient(circle at 50% 30%, #4d3d28, #120e0a); color: var(--gold-2); font-family: var(--f-impact); font-size: 14px; }
-.choice:hover:not(:disabled) { border-color: var(--gold); background: linear-gradient(180deg, rgba(76, 61, 41, .95), rgba(34, 27, 20, .95)); }
+.choice { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: center; text-align: left; width: 100%; padding: 8px 12px 8px 8px; background: linear-gradient(180deg, rgba(42, 33, 24, .94), rgba(20, 15, 11, .96) 65%, rgba(13, 10, 8, .98)); border: 1px solid #685130; border-radius: 3px; cursor: pointer; font-size: 15px; line-height: 1.5; box-shadow: inset 0 1px 0 rgba(255, 232, 188, .1), inset 0 0 0 1px rgba(0, 0, 0, .55), 0 2px 5px rgba(0, 0, 0, .4); }
+.choice .no { position: relative; width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid #b89248; border-radius: 3px; background: radial-gradient(circle at 50% 28%, #584326, #18110b 78%); color: var(--gold-2); font-family: var(--f-impact); font-size: 14px; box-shadow: inset 0 1px 0 rgba(255, 236, 190, .25), 0 1px 3px rgba(0, 0, 0, .65); }
+.choice:hover:not(:disabled) { border-color: var(--gold); background: linear-gradient(180deg, rgba(68, 52, 34, .96), rgba(30, 23, 16, .98)); box-shadow: inset 0 1px 0 rgba(255, 238, 198, .2), 0 0 10px rgba(227, 190, 114, .22); }
 /* 누르는 동안만 1px 눌림 (창은 그대로) */
 .choice:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0, 0, 0, .55); }
 /* 답한 뒤: 줄 색은 바꾸지 않고, 정답 줄 테두리만 밝히고 나머지는 흐리게. 판정은 빨간 펜 자국이 한다 */
@@ -718,9 +719,10 @@ body.started[data-screen="town"]:not(.win-open) #field-guide {
 }
 body.started[data-screen="town"]:not(.win-open) #town-study {
   flex: none; display: grid; gap: 6px; padding: 10px;
-  border: 1px solid var(--edge); border-radius: 3px; background: rgba(20, 16, 12, .94);
+  border: 1px solid #000; border-radius: 3px; background: linear-gradient(180deg, rgba(24, 19, 14, .95), rgba(11, 8, 6, .96));
+  box-shadow: inset 0 0 0 1px #725832, inset 0 0 0 2px rgba(0, 0, 0, .65), 0 6px 18px rgba(0, 0, 0, .65);
 }
-#town-study strong { color: var(--gold-2); font: 18px/1.3 var(--f-display); }
+#town-study strong { color: var(--gold-2); font: 18px/1.3 var(--f-display); text-shadow: 0 1px 2px #000; }
 #town-study .btn { text-align: left; min-height: 34px; }
 #town-study small { color: var(--text); font-variant-numeric: tabular-nums; }
 #town-study .town-links { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -733,7 +735,7 @@ body:has(#help:not([hidden])) #field-guide { visibility: hidden; }
   #town-study strong { font-size: 15px; }
 }
 /* 위치는 HUD 조각의 쌓임 약속(--hud-top)을 읽는다 */
-#quest { position: absolute; top: var(--hud-top); left: var(--gl); width: 236px; font-size: 12.5px; text-shadow: 0 1px 2px #000, 0 0 3px #000; padding: 8px 10px 9px; background: linear-gradient(90deg, rgba(8, 6, 4, .55), rgba(8, 6, 4, 0)); border-left: 2px solid rgba(227, 190, 114, .5); }
+#quest { position: absolute; top: var(--hud-top); left: var(--gl); width: 236px; font-size: 12.5px; text-shadow: 0 1px 2px #000, 0 0 3px #000; padding: 8px 10px 9px; background: linear-gradient(90deg, rgba(12, 9, 6, .78), rgba(12, 9, 6, .42) 68%, rgba(8, 6, 4, 0)); border-left: 2px solid #c8a258; }
 #quest:empty { display: none; }
 .qt-h { width: 100%; background: none; border: 0; border-bottom: 1px solid rgba(227, 190, 114, .35); padding: 0 0 2px; margin: 0 0 5px; cursor: pointer; text-align: left; text-shadow: inherit; font-family: var(--f-display); font-size: 16px; color: var(--gold-2); display: flex; justify-content: space-between; align-items: baseline; }
 .qt-next { color: var(--text); }
@@ -757,26 +759,26 @@ body:has(#help:not([hidden])) #field-guide { visibility: hidden; }
 .alert { margin: 10px 0 0; padding: 8px 10px; border: 1px solid #7a3a2f; background: rgba(212, 72, 62, .12); color: #f3c2b9; font-size: 13px; border-radius: 2px; }
 .alert b { color: #ffb3a8; font-weight: 600; }
 .subj { display: grid; gap: 8px; }
-.subj .s { border: 1px solid var(--edge); background: rgba(0, 0, 0, .28); padding: 8px 10px; border-radius: 2px; }
+.subj .s { border: 1px solid #68502c; background: linear-gradient(180deg, rgba(28, 22, 16, .72), rgba(12, 9, 7, .82)); box-shadow: inset 0 1px 0 rgba(255, 230, 185, .07); padding: 8px 10px; border-radius: 3px; }
 .subj .s.risk { border-color: #7a3a2f; }
 .subj .s-h { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; margin-bottom: 4px; }
 .subj .s-h b { font-weight: 500; }
 .m3 { display: grid; grid-template-columns: 5.2em minmax(0, 1fr) 2.8em; gap: 4px 6px; align-items: center; font-size: 12px; color: var(--muted); }
 .m3 em { font-style: normal; color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
 .dest { display: grid; gap: 8px; }
-.dz { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; border: 1px solid color-mix(in srgb, var(--zc) 55%, var(--edge)); background: linear-gradient(90deg, color-mix(in srgb, var(--zc) 24%, #15110d), rgba(0, 0, 0, .3)); padding: 9px 10px; border-radius: 3px; }
-.dz b { font-family: var(--f-display); font-weight: 400; font-size: 18px; }
+.dz { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; border: 1px solid color-mix(in srgb, var(--zc) 58%, #68502c); background: linear-gradient(90deg, color-mix(in srgb, var(--zc) 26%, #17120d), rgba(10, 8, 6, .75)); box-shadow: inset 0 1px 0 rgba(255, 232, 188, .08), 0 2px 6px rgba(0, 0, 0, .4); padding: 9px 10px; border-radius: 3px; }
+.dz b { font-family: var(--f-display); font-weight: 400; font-size: 18px; text-shadow: 0 1px 2px #000; }
 .dz .meta { font-size: 12px; color: var(--muted); }
 .dz .meta .m { color: var(--drop); }
 .dz .meta .lock { color: var(--warn); }
 .dz .btn { grid-row: 1 / span 2; grid-column: 2; }
 
 .kvs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 4px 0 10px; }
-.kv { background: rgba(0, 0, 0, .3); border: 1px solid var(--edge); padding: 6px 8px; border-radius: 2px; min-width: 0; }
+.kv { background: linear-gradient(180deg, rgba(28, 22, 16, .74), rgba(10, 8, 6, .84)); border: 1px solid #68502c; box-shadow: inset 0 1px 0 rgba(255, 230, 185, .07); padding: 6px 8px; border-radius: 3px; min-width: 0; }
 .kv span { display: block; font-size: 11px; color: var(--muted); }
-.kv b { font-family: var(--f-impact); font-weight: 400; font-size: 21px; font-variant-numeric: tabular-nums; color: var(--gold-2); }
+.kv b { font-family: var(--f-impact); font-weight: 400; font-size: 21px; font-variant-numeric: tabular-nums; color: var(--gold-2); text-shadow: 0 1px 2px #000; }
 .res { display: grid; gap: 6px; }
-.res .it { border: 1px solid var(--edge); background: rgba(0, 0, 0, .28); padding: 7px 10px; border-radius: 2px; font-size: 13px; }
+.res .it { border: 1px solid #68502c; background: linear-gradient(180deg, rgba(26, 20, 15, .72), rgba(11, 8, 6, .82)); box-shadow: inset 0 1px 0 rgba(255, 230, 185, .06); padding: 7px 10px; border-radius: 3px; font-size: 13px; }
 .res .it b { font-weight: 500; }
 .res .it.ok { border-left: 3px solid var(--exp); }
 .res .it.un { border-left: 3px solid var(--warn); }
@@ -798,7 +800,7 @@ body:has(#help:not([hidden])) #field-guide { visibility: hidden; }
 .t-un b { color: var(--warn); }
 .t-bad b { color: #ff8273; }
 .gears { display: grid; gap: 8px; }
-.gear { display: grid; grid-template-columns: 3.8em minmax(0, 1fr) auto; grid-template-areas: "slot name btn" "slot meta btn"; gap: 0 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 3px; background: rgba(0, 0, 0, .28); }
+.gear { display: grid; grid-template-columns: 3.8em minmax(0, 1fr) auto; grid-template-areas: "slot name btn" "slot meta btn"; gap: 0 10px; align-items: center; padding: 8px 10px; border: 1px solid #68502c; border-radius: 3px; background: linear-gradient(180deg, rgba(28, 22, 16, .76), rgba(11, 8, 6, .86)); box-shadow: inset 0 1px 0 rgba(255, 230, 185, .07); }
 .gear .gslot { grid-area: slot; font-size: 11px; color: var(--muted); text-align: center; border-right: 1px solid var(--edge); align-self: stretch; display: grid; place-items: center; align-content: center; gap: 2px; padding-right: 8px; }
 .gear .gslot svg { width: 30px; height: 30px; padding: 3px; border-radius: 3px; background: radial-gradient(circle at 50% 35%, #3a2e22, #120e0a); border: 1px solid var(--edge-hi); }
 .gear.mid .gslot svg { border-color: #6aa8ff; box-shadow: 0 0 8px rgba(106, 168, 255, .55); }
@@ -820,7 +822,7 @@ body:has(#help:not([hidden])) #field-guide { visibility: hidden; }
 .tl .kicker { font-size: 13px; letter-spacing: .5em; color: var(--gold); text-shadow: 0 1px 2px #000; padding-left: .5em; }
 .logo { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(72px, 13vw, 140px); line-height: 1; letter-spacing: .08em; padding-left: .08em; background: linear-gradient(180deg, #fff8dc 0%, #f3d38c 38%, #b88a3e 68%, #5c3d15 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 0 #160d05) drop-shadow(0 0 34px rgba(240, 180, 90, .35)); }
 .tl .sub { margin: 0; font-size: clamp(14px, 2vw, 17px); letter-spacing: .2em; color: var(--text); text-shadow: 0 1px 3px #000; }
-.startbtn { margin-top: 18px; padding: 13px 52px; font-family: var(--f-display); font-size: 23px; letter-spacing: .2em; background: linear-gradient(180deg, #86642f, #3d2b13); border: 1px solid var(--gold); border-radius: 3px; color: #fff3d6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 240, 200, .35), 0 0 0 3px rgba(0, 0, 0, .6), 0 0 26px rgba(227, 190, 114, .3); text-shadow: 0 2px 0 #000; }
+.startbtn { margin-top: 18px; padding: 13px 52px; font-family: var(--f-display); font-size: 23px; letter-spacing: .2em; background: linear-gradient(180deg, #9a7334 0%, #583e18 55%, #2e1e0a 100%); border: 1px solid var(--gold-2); border-radius: 3px; color: #fff3d6; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255, 245, 212, .45), inset 0 0 0 2px rgba(20, 12, 4, .75), 0 0 0 3px rgba(0, 0, 0, .75), 0 8px 28px rgba(0, 0, 0, .8), 0 0 28px rgba(227, 190, 114, .32); text-shadow: 0 2px 0 #000; }
 .startbtn:hover { filter: brightness(1.15); box-shadow: inset 0 1px 0 rgba(255, 240, 200, .45), 0 0 0 3px rgba(0, 0, 0, .6), 0 0 36px rgba(227, 190, 114, .5); }
 .loading { margin: 0; font-size: 12.5px; color: var(--gold); letter-spacing: .1em; animation: loadpulse 1.4s ease-in-out infinite; }
 @keyframes loadpulse { 50% { opacity: .45; } }
@@ -9331,11 +9333,14 @@ const SPR = { on: false, tex: {}, def: {
   golem: { file: 'spr/golem.webp', rows: 3, h: 3.3, top: 2.6, aspect: 320 / 400, foot: 0.05,
     walk: { row: 3, frames: 4, stride: 1.2 },
     act: { 'golem.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
-  slime: { file: 'spr/slime.webp', rows: 3, h: 2.2, top: 1.35, aspect: 320 / 400, foot: 0.05, stride: 0.85,
+  slime: { file: 'spr/slime.webp', rows: 3, h: 2.2, top: 1.35, aspect: 320 / 400, foot: 0.05,
+    walk: { row: 3, frames: 4, stride: 0.85 },
     act: { 'slime.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
-  bat: { file: 'spr/bat.webp', rows: 3, h: 3.6, top: 2.3, aspect: 320 / 400, foot: 0.05, stride: 0.95,
+  bat: { file: 'spr/bat.webp', rows: 3, h: 3.6, top: 2.3, aspect: 320 / 400, foot: 0.05,
+    walk: { row: 3, frames: 4, stride: 0.95 },
     act: { 'bat.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
-  guard: { file: 'spr/guard.webp', rows: 3, h: 2.9, top: 2.45, aspect: 320 / 400, foot: 0.05, stride: 1.05,
+  guard: { file: 'spr/guard.webp', rows: 3, h: 2.9, top: 2.45, aspect: 320 / 400, foot: 0.05,
+    walk: { row: 3, frames: 4, stride: 1.05 },
     act: { 'guard.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
 } };
 for (const [kind, action] of Object.entries({ wizard: 'cast', healer: 'cast', smith: 'hammer', captain: null,
@@ -9366,7 +9371,7 @@ const SPR_LOAD = SPR_WANT
   ? Promise.all(Object.entries(SPR.def).map(([k, d]) => new THREE.TextureLoader().loadAsync(ASSET_BASE + d.file).then((tx) => {
     tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = maxAniso; tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping; ASSET_TEX.add(tx);
     d.cols = Math.max(1, Math.round(tx.image.width / 320));
-    if (k === 'knight' || k === 'golem') d.rows = Math.round(tx.image.height / 400);
+    if (k === 'knight' || d.walk) d.rows = Math.round(tx.image.height / 400);
     SPR.tex[k] = tx;
   }, () => {}))).then(() => { if (!SKIN.done && Object.keys(SPR.tex).length) SPR.on = true; })
   : Promise.resolve();
@@ -9469,28 +9474,19 @@ function sprPose(c, d, t) {
   } else if (D.walk && D.rows > D.walk.row && D.cols === 8 && c.travel > 1e-7) {
     R.walkPhase = walkPhase(R.walkPhase || 0, c.travel, D.walk.stride);
     row = D.walk.row; col = Math.floor(R.walkPhase * D.walk.frames);
-  } else if (D.stride && c.travel > 1e-7) {
-    R.walkPhase = walkPhase(R.walkPhase || 0, c.travel, D.stride);
-    col = Math.floor(R.walkPhase * 4) % 4;
-    if (!calmFx()) {
-      const w = R.walkPhase * Math.PI * 2;
-      if (c.kind === 'slime') {
-        const hop = Math.max(0, Math.sin(w));
-        R.body.position.y = R.y0 + hop * 0.08;
-        R.body.scale.set(1 - (hop - 0.3) * 0.05, 1 + (hop - 0.3) * 0.08, 1);
-      } else if (c.kind === 'guard') {
-        R.body.position.y = R.y0 + (1 - Math.abs(Math.cos(w))) * 0.045;
-      } else if (c.kind === 'bat') {
-        R.body.position.y = R.y0 + Math.sin(w) * 0.06;
-      }
+  } else if (D.walking) {
+    if (c.travel > 1e-7 || (c.speed || 0) >= 0.15) {
+      R.walkPhase = walkPhase(R.walkPhase || 0, c.travel > 1e-7 ? c.travel : d * (c.speed || 0.4) * 2.4, 1.1);
+      col = Math.floor(R.walkPhase * 4) % 4;
+      if (!calmFx()) R.body.position.y = R.y0 + (1 - Math.abs(Math.cos(R.walkPhase * Math.PI * 2))) * 0.024;
+    } else {
+      col = 1;
+      if (!calmFx()) R.body.scale.y = 1 + Math.sin(t * 2.2 + c.seed * 6.28) * 0.012;
     }
   } else if ((c.speed || 0) > 0.15 && D.act.run !== undefined) {
     c.phase += d * Math.PI * 2 * 1.5 * Math.min(1.3, c.speed);
     row = D.act.run; col = Math.floor(c.phase / (Math.PI / 2)) % 4;
     if (extended && Math.floor(c.phase / (Math.PI / 4)) % 2) extraRow = 7;
-  } else if (D.walking && !calmFx()) {
-    if ((c.speed || 0) >= 0.15) R.body.position.y = R.y0 + (1 - Math.abs(Math.cos(t * 5.2 + c.seed))) * 0.028;
-    else R.body.scale.y = 1 + Math.sin(t * 2.2 + c.seed * 6.28) * 0.012;
   }
   // 칸 → 판의 UV (바뀔 때만). 8칸 그림은 뒤 4칸이 뒷모습
   const cols = D.cols || 4, backCol = R.back && cols === 8 ? 4 : 0;
@@ -11205,6 +11201,30 @@ function buildS1() {
   // 서가와 석상 (Poly Haven 사진 측량 모델)
   [[-9.6, 10.4], [-7.2, 10.5], [7.4, 10.5], [9.6, 10.4]].forEach(([x, y]) => prop(W, 'ph:wooden_bookshelf_worn', x, y));
   [[-3.4, 9.8, 0.3], [3.8, 9.8, -0.3]].forEach(([x, y, r]) => prop(W, 'ph:gothic_statue', x, y, { rot: r, s: 1.15, obs: 0.8 }));
+  // 중앙 황동 천구의(Orrery) 성소 랜드마크: 두 고딕 석상 사이에서 천천히 맞물려 돈다
+  {
+    const og = sg(W, 0.2, 9.2);
+    part(cyl(1.35, 1.55, 0.36, 20), pilD, og, 0, 0.18, 0);
+    part(cyl(0.95, 1.15, 0.48, 20), pil, og, 0, 0.6, 0);
+    part(geo('orbase', () => new THREE.TorusGeometry(1.02, 0.06, 8, 28)), brass, og, 0, 0.84, 0).rotation.x = Math.PI / 2;
+    part(cyl(0.16, 0.22, 1.35, 12), brass, og, 0, 1.45, 0);
+    const r1 = part(geo('orr1', () => new THREE.TorusGeometry(1.18, 0.055, 10, 36)), brass, og, 0, 2.35, 0);
+    const r2 = part(geo('orr2', () => new THREE.TorusGeometry(0.88, 0.045, 10, 32)), brass, og, 0, 2.35, 0);
+    const r3 = part(geo('orr3', () => new THREE.TorusGeometry(0.58, 0.038, 8, 28)), brass, og, 0, 2.35, 0);
+    const core = part(geo('orcore', () => new THREE.OctahedronGeometry(0.28)), crysS1[0x8ce4ff], og, 0, 2.35, 0);
+    r1.userData.dyn = true; r2.userData.dyn = true; r3.userData.dyn = true; core.userData.dyn = true;
+    W.updaters.push((dt, t) => {
+      r1.rotation.set(0.45, t * 0.35, 0.2);
+      r2.rotation.set(t * 0.5, -t * 0.28, 0.8);
+      r3.rotation.set(-0.6, t * 0.65, t * 0.4);
+      core.rotation.y = -t * 0.9;
+    });
+    addObs(W, 0.2, 9.2, 1.25);
+  }
+  [[-5.2, 10.6], [5.4, 10.6]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 3.3, s: 1.35, shadow: false }));
+  [[-10.4, 11.1, 0], [10.0, 11.1, 0]].forEach(([x, y, r]) => prop(W, 'ph:kite_shield', x, y, { y: 2.3, rot: r, s: 1.15, shadow: false }));
+  [[-11.8, 6.2, 'rock01'], [11.8, 6.5, 'rock02'], [-11.4, -6.5, 'rock03']].forEach(([x, y, nd], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, rot: i * 1.7, s: 1.25, obs: 0.9 }));
+  prop(W, 'ph:rock_07', 11.4, -6.6, { rot: 0.9, s: 1.15, obs: 0.85 });
   // 전투 화면에 걸리는 둘레(몬스터 자리와 기존 장애물 밖)에도 서가와 촛대를 둔다
   [[-6.0, 7.6, 0.2], [6.0, 7.4, -0.2]].forEach(([x, y, r]) => prop(W, 'ph:wooden_bookshelf_worn', x, y, { rot: r, obs: 0.8 }));
   [[-7.2, 1.9], [9.0, -1.4], [-4.0, -6.8], [6.8, -6.9], [-0.8, -6.6], [-6.4, -3.4]].forEach(([x, y], i) => prop(W, i % 3 ? 'ph:wooden_lantern_01' : 'ph:wooden_bucket_01', x, y, { rot: rand(0, TAU), shadow: false }));
@@ -11346,21 +11366,46 @@ function buildS2() {
     sp.scale.setScalar(rand(0.8, 1.3));
     addObs(W, x, y, 0.9);
   });
-  // 연돌(굴뚝): 통풍력 = 높이와 밀도 차
+  // 연돌(굴뚝)과 파괴된 용광로 랜드마크: 검은 벽돌과 무쇠 띠, 용암 화구
   {
+    const bm = texMatR('brick', 256, [2, 6], { roughness: 0.9 }, { seed: 41, a: [72, 48, 40], b: [108, 74, 60] });
+    surfUpgrade(bm, 'dbrick', 3, 6, { tint: 0x9a7868, gain: 1.25 });
+    const ironM = stdM(0x2a1e18, 0.55, 0.8);
+    surfUpgrade(ironM, 'rusty', 2, 1, { tint: 0x7a685c, metal: true });
     const g = sg(W, -6.5, 15.5);
-    const bm = texMatR('brick', 256, [2, 6], { roughness: 0.9 }, { seed: 41, a: [92, 62, 52], b: [128, 92, 76] });
-    part(cyl(1.0, 1.5, 12, 18), bm, g, 0, 6, 0);
-    part(cyl(1.15, 1.15, 0.5, 18), stdM(0x2a1a14, 0.8), g, 0, 12.1, 0);
+    part(box(3.8, 2.4, 3.8), bm, g, 0, 1.2, 0);
+    part(cyl(1.05, 1.55, 12, 18), bm, g, 0, 6, 0);
+    [2.6, 5.8, 9.2, 12.1].forEach((y) => part(cyl(1.38 - y * 0.02, 1.42 - y * 0.02, 0.36, 18), ironM, g, 0, y, 0));
+    part(box(1.4, 1.1, 0.12), pool, g, 0, 1.1, 1.92);
     smokeStack(W, w2(-6.5, 15.5, 12.4), 7, 0x3a302a, 1.8);
     fire(W, w2(-6.5, 15.5, 12.3), 0.9);
+    // 오른쪽 무너진 부속 제련로
+    const g2 = sg(W, 5.4, 14.8, -0.2);
+    part(box(3.2, 2.0, 3.2), bm, g2, 0, 1.0, 0);
+    part(cyl(1.1, 1.4, 5.2, 16), bm, g2, 0, 3.6, 0);
+    part(cyl(1.28, 1.32, 0.34, 16), ironM, g2, 0, 3.4, 0);
+    part(box(1.1, 0.9, 0.12), pool, g2, 0, 0.95, 1.62);
+    fire(W, w2(5.4, 14.8, 6.2), 0.65);
   }
+  const vRockTint = (m) => { const c = m.clone(); c.color.multiply(C(0x5c4a42)); c.roughness = 0.95; return c; };
+  [[-4.4, 8.8], [5.8, 8.4]].forEach(([x, y], i) => {
+    if (prop(W, 'ph:stone_fire_pit', x, y, { s: 1.35, rot: i * 1.4, obs: 0.95 })) fire(W, w2(x, y, 0.45), 0.55);
+  });
+  [[-11.8, 3.4, 'rock01'], [11.8, 4.2, 'rock02'], [-11.4, -3.6, 'rock03']].forEach(([x, y, nd], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, rot: i * 1.9, s: 1.35, mat: vRockTint, matKey: 's2vrock', obs: 1.0 }));
+  prop(W, 'ph:rock_07', 11.5, -2.8, { rot: 2.2, s: 1.25, mat: vRockTint, matKey: 's2vrock7', obs: 0.95 });
+  prop(W, 'ph:old_military_crate', 1.8, 8.4, { rot: 0.35, obs: 0.7 });
+  prop(W, 'ph:metal_tool_chest', -7.8, -6.6, { rot: -0.45, obs: 0.65 });
   for (let i = 0; i < 5; i++) {
-    const g = sg(W, [-5.5, 9.5, -10, 0.5, 11.5][i], [4.8, -1.5, -5.5, 7.8, 5.5][i], rand(0, TAU));
-    const m = stdM(0x1c1410, 0.9);
-    part(cyl(0.08, 0.16, 2.2, 6), m, g, 0, 1.1, 0);
+    const tx = [-5.5, 9.5, -10, 0.5, 11.5][i], ty = [4.8, -1.5, -5.5, 7.8, 5.5][i];
+    const g = sg(W, tx, ty, rand(0, TAU));
+    const m = stdM(0x1c1410, 0.92);
+    for (let k = 0; k < 3; k++) {
+      const a = (k / 3) * TAU + i, rk = part(rockGeo(1, (i + k) % 7), k % 2 ? rock : rock2, g, Math.cos(a) * 0.28, 0.14, Math.sin(a) * 0.28);
+      rk.scale.set(0.36, 0.22, 0.32);
+    }
+    part(cyl(0.08, 0.18, 2.2, 6), m, g, 0, 1.1, 0);
     [[0.6, 1.5, 0.7], [-0.5, 1.2, -0.8], [0.3, 1.9, -0.5]].forEach(([x, y, r]) => { const b = part(cyl(0.03, 0.07, 1.0, 5), m, g, x * 0.4, y, 0); b.rotation.z = r; });
-    addObs(W, [-5.5, 9.5, -10, 0.5, 11.5][i], [4.8, -1.5, -5.5, 7.8, 5.5][i], 0.4);
+    addObs(W, tx, ty, 0.45);
   }
   W.updaters.push((dt) => {
     if (Math.random() < dt * 26 * fxScale()) {
@@ -11416,13 +11461,16 @@ function buildS3() {
   pipeRun(0, 12.2, 50, 3.2, 0.45, 0, pipeM); pipeRun(0, 12.2, 50, 5.4, 0.3, 0, copper); pipeRun(0, 12.2, 50, 8, 0.55, 0, pipeM);
   pipeRun(-15.3, 0, 40, 2.6, 0.4, Math.PI / 2, copper); pipeRun(15.8, 0, 40, 4.2, 0.5, Math.PI / 2, pipeM);
   // 노통연관식 보일러
+  const bShell = stdM(0x56524c, 0.42, 0.75), bBrick = stdM(0x4a3e38, 0.85);
+  surfUpgrade(bShell, 'rusty', 2, 1, { tint: 0x90867c, gain: 1.22, metal: true });
+  surfUpgrade(bBrick, 'dbrick', 2, 1, { tint: 0x827468, gain: 1.15 });
   function boiler(sx, sy, rot) {
     const g = sg(W, sx, sy, rot);
-    const shell = stdM(0x56524c, 0.42, 0.75);
-    part(geo('bshell', () => new THREE.CylinderGeometry(1.6, 1.6, 6, 28)), shell, g, 0, 2.0, 0).rotation.z = Math.PI / 2;
-    [-3.0, 3.0].forEach((x) => part(geo('bcap', () => new THREE.SphereGeometry(1.6, 24, 12, 0, Math.PI)), shell, g, x, 2.0, 0).rotation.set(0, x > 0 ? Math.PI / 2 : -Math.PI / 2, 0));
+    part(box(6.4, 0.45, 3.0), bBrick, g, 0, 0.22, 0);
+    part(geo('bshell', () => new THREE.CylinderGeometry(1.6, 1.6, 6, 28)), bShell, g, 0, 2.0, 0).rotation.z = Math.PI / 2;
+    [-3.0, 3.0].forEach((x) => part(geo('bcap', () => new THREE.SphereGeometry(1.6, 24, 12, 0, Math.PI)), bShell, g, x, 2.0, 0).rotation.set(0, x > 0 ? Math.PI / 2 : -Math.PI / 2, 0));
     for (let i = -2; i <= 2; i++) part(geo('bband', () => new THREE.TorusGeometry(1.63, 0.06, 6, 32)), dark, g, i * 1.3, 2.0, 0).rotation.y = Math.PI / 2;
-    [-2, 2].forEach((x) => part(box(0.5, 0.6, 2.6), dark, g, x, 0.3, 0));
+    [-2, 2].forEach((x) => part(box(0.55, 0.65, 2.65), bBrick, g, x, 0.32, 0));
     part(cyl(0.3, 0.3, 2.2, 12), pipeM, g, -1.2, 4.3, 0);
     const gm = emit(W, new THREE.MeshStandardMaterial({ map: gaugeTex(), roughness: 0.4, emissive: new THREE.Color(0x333322), emissiveIntensity: 0.6 }));
     const dial = part(geo('dial', () => new THREE.CylinderGeometry(0.42, 0.42, 0.08, 24)), [dark, gm, dark], g, 1.0, 2.6, 1.62);
@@ -11508,6 +11556,7 @@ function buildS3() {
   {
     // 격자 밑은 보일러 불빛이 새는 호박빛 (주변 발광)
     const grM = stdM(0x2e2c2a, 0.5, 0.85), glowG = emit(W, new THREE.MeshBasicMaterial({ color: C(0xd08440, 0.4) }));
+    surfUpgrade(grM, 'grate', 1, 1, { tint: 0x948a80, gain: 1.2, metal: true });
     [[-3.6, 3.6, 0.3], [2.6, -5.6, -0.2], [8.6, -1.0, 0.5]].forEach(([x, y, r]) => {
       const g = sg(W, x, y, r);
       part(box(1.6, 0.01, 1.0), glowG, g, 0, 0.006, 0).castShadow = false;
@@ -11518,6 +11567,24 @@ function buildS3() {
       W.updaters.push((dt) => { if (Math.random() < dt * 1.4 * fxScale()) SMOKE.emit(p.x + rand(-0.5, 0.5), 0.1, p.z + rand(-0.3, 0.3), { vy: rand(0.6, 1.1), vx: rand(-0.1, 0.1), c: C(0xd8f0ea), life: rand(1.4, 2.2), s: 0.3, s1: 1.2, a: 0.2, drag: 0.3 }); });
     });
   }
+  // 뒤쪽 중앙 증기 분배기(Steam Manifold) 및 밸브 벽면 랜드마크
+  {
+    const mg = sg(W, 1.2, 10.6);
+    part(box(3.4, 0.45, 1.6), bBrick, mg, 0, 0.22, 0);
+    part(cyl(0.65, 0.72, 3.2, 18), bShell, mg, 0, 1.9, 0);
+    [-1.1, 1.1].forEach((x) => {
+      part(cyl(0.28, 0.32, 2.8, 14), copper, mg, x, 1.6, 0.15);
+      part(geo('mband', () => new THREE.TorusGeometry(0.32, 0.045, 6, 20)), dark, mg, x, 2.2, 0.15).rotation.x = Math.PI / 2;
+    });
+    const fw = grp(mg, 0, 2.1, 0.72);
+    part(geo('mwheel', () => new THREE.TorusGeometry(0.55, 0.06, 8, 24)), red, fw);
+    [0, 1, 2, 3].forEach((k) => { const sp = part(box(1.08, 0.045, 0.045), red, fw); sp.rotation.z = (k / 4) * Math.PI; });
+    fw.userData.dyn = true;
+    W.updaters.push((dt) => { fw.rotation.z += dt * 0.35; });
+    addObs(W, 1.2, 10.6, 1.4);
+  }
+  [[-1.8, 10.4], [4.2, 10.4]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 3.5, s: 1.35, shadow: false }));
+  [[-6.8, -6.8], [3.6, -6.8]].forEach(([x, y], i) => prop(W, i ? 'ph:wooden_lantern_01' : 'ph:metal_tool_chest', x, y, { rot: i * 0.8 - 0.3, shadow: false }));
   // 바닥 배관, 밸브대, 응축수 웅덩이
   { const g = sg(W, 1.5, 7.2); part(geo('floorpipe', () => new THREE.CylinderGeometry(0.28, 0.28, 18, 14)), pipeM, g, 0, 0.3, 0).rotation.z = Math.PI / 2; for (let i = -3; i <= 3; i++) { part(box(0.5, 0.35, 0.7), dark, g, i * 2.6, 0.17, 0); } }
   {
@@ -11613,10 +11680,13 @@ function buildS4() {
   brazier(W, K, -1.8, 6.9, 1.1); brazier(W, K, 3.2, 6.9, 1.1); brazier(W, K, -10.5, 1.5, 1); brazier(W, K, 11.5, 2, 1);
   pLight(W, w2(0.7, 7, 2.4), 0xffa040, 9, 11, { flicker: true });
   [[-12, 5.5], [12.5, 6]].forEach(([x, y]) => { const g = sg(W, x, y); part(cyl(1.0, 1.1, 0.7, 16), sandM, g, 0, 0.35, 0); tree(W, K, x, y, 0.8, true); });
-  // 펼쳐진 거대 고서적: 쪽이 천천히 넘어간다 (한글 법령 제목 제거, 고딕 필사본 양피지)
+  // 펼쳐진 거대 고서적과 고딕 성소 제단: 쪽이 천천히 넘어간다 (한글 법령 제목 제거, 고딕 필사본 양피지)
   {
     const g = sg(W, 0.6, 6.2);
-    part(box(1.6, 0.9, 1.0), sandM, g, 0, 0.45, 0);
+    part(box(3.4, 0.22, 2.4), sandM, g, 0, 0.11, 0);
+    part(box(2.6, 0.22, 1.8), marble, g, 0, 0.33, 0);
+    part(box(1.6, 0.9, 1.0), sandM, g, 0, 0.78, 0);
+    part(box(1.76, 0.12, 1.16), K.gold, g, 0, 1.24, 0);
     const pageTex = canvasTex(256, 320, (c, w, h) => {
       c.fillStyle = '#9c8d72'; c.fillRect(0, 0, w, h);
       c.strokeStyle = '#5c4628'; c.lineWidth = 5; c.strokeRect(14, 14, w - 28, h - 28);
@@ -11628,7 +11698,7 @@ function buildS4() {
     });
     const pm = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.92, side: THREE.DoubleSide });
     const cover = stdM(0x3e1612, 0.78);
-    const book = grp(g, 0, 1.0, 0);
+    const book = grp(g, 0, 1.34, 0);
     book.rotation.x = -0.35;
     part(box(1.9, 0.08, 1.3), cover, book, 0, -0.04, 0);
     const lp = part(new THREE.PlaneGeometry(0.88, 1.2), pm, book, -0.46, 0.02, 0); lp.rotation.x = -Math.PI / 2;
@@ -11637,10 +11707,19 @@ function buildS4() {
     const fp = part(new THREE.PlaneGeometry(0.88, 1.2), pm, flip, 0.45, 0, 0); fp.rotation.x = -Math.PI / 2;
     flip.userData.dyn = true; lp.userData.dyn = true; rp.userData.dyn = true; fp.userData.dyn = true;
     W.updaters.push((dt, t) => { const u = (t % 6) / 6; flip.rotation.z = u < 0.35 ? (u / 0.35) * Math.PI : u < 0.5 ? Math.PI : 0; flip.visible = u < 0.5; });
-    const bp = w2(0.6, 6.2, 1.4);
+    const bp = w2(0.6, 6.2, 1.7);
     W.updaters.push((dt) => { if (Math.random() < dt * 5 * fxScale()) FX.emit(bp.x + rand(-0.6, 0.6), bp.y, bp.z + rand(-0.4, 0.4), { vy: rand(0.4, 0.9), c: C(0xffe2a0, 2.5), life: rand(1, 1.8), s: 0.08, s1: 0 }); });
-    addObs(W, 0.6, 6.2, 1.2);
+    addObs(W, 0.6, 6.2, 1.5);
   }
+  // 성소 서가·샹들리에·무너진 대리석 기둥 토막
+  [[-11.2, 7.4, 0.25], [11.6, 7.4, -0.25]].forEach(([x, y, r]) => prop(W, 'ph:wooden_bookshelf_worn', x, y, { rot: r, s: 1.15, obs: 0.9 }));
+  [[-4.6, 9.2], [5.4, 9.2]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 4.8, s: 1.25, obs: 0, shadow: false }));
+  [[-11.8, -1.2, 0.4], [12.2, -0.8, -0.5]].forEach(([x, y, r]) => {
+    const g = sg(W, x, y, r);
+    const d1 = part(cyl(0.44, 0.46, 1.5, 16), marble, g, 0, 0.42, 0); d1.rotation.z = Math.PI / 2; d1.rotation.y = 0.3;
+    part(cyl(0.46, 0.48, 0.85, 16), sandM, g, 0.65, 0.42, 0.45);
+    addObs(W, x, y, 0.85);
+  });
   // 바닥에 흩어진 법전 낱장 (두 장은 바람에 이따금 들썩인다)
   {
     const pageTex = canvasTex(128, 160, (g, w, h) => {
@@ -11717,7 +11796,8 @@ function buildRift() {
   W.group.add(vortex);
   W.updaters.push((dt) => { vortex.rotation.z += dt * 0.3; });
   for (let i = 0; i < 8; i++) {
-    const x = rand(-12, 12), y = rand(-8, 9);
+    let x = rand(-12, 12), y = rand(-8, 9);
+    if (Math.hypot(x + 4.2, y + 1.8) < 2.4) { x -= 2.8; y -= 1.8; }
     if (!paintedProp(W, 'shards', x, y, rand(1.25, 2.2), i % 2 === 0)) {
       const g = sg(W, x, y, rand(0, TAU));
       for (let k = 0; k < 4; k++) { const c = part(geo('crys1', () => new THREE.OctahedronGeometry(0.35)), cryM[(i + k) % 3], g, rand(-0.5, 0.5), 0.4, rand(-0.5, 0.5)); c.scale.set(0.7, rand(1.4, 2.8), 0.7); c.rotation.set(rand(-0.4, 0.4), rand(0, TAU), rand(-0.4, 0.4)); }
@@ -11736,6 +11816,40 @@ function buildRift() {
       if (on > 0) { on -= CALM.raw; bolt.intensity = (reducedMotion ? 150 : Math.sin(on * 28) > 0 ? 260 : 60) * Math.max(0, on / 0.35); } else bolt.intensity = 0;
     });
   }
+  // 균열의 흑요석 차원문과 무너진 고딕 성소 기둥열 (D2R 혼돈의 성역 풍경)
+  const obsStone = stdM(0x3a3246, 0.88), colStone = stdM(0x484056, 0.82);
+  surfUpgrade(obsStone, 'castle', 2, 1, { tint: 0x423950 });
+  surfUpgrade(colStone, 'blocks', 1, 2, { tint: 0x4c435c });
+  {
+    const g = sg(W, 0.2, 10.2);
+    part(box(6.4, 0.35, 2.6), obsStone, g, 0, 0.18, 0);
+    part(box(5.2, 0.35, 2.0), obsStone, g, 0, 0.52, 0);
+    [-2.3, 2.3].forEach((px, i) => {
+      part(box(0.95, 4.6, 0.95), colStone, g, px, 2.8, 0);
+      part(box(1.15, 0.38, 1.15), obsStone, g, px, 5.2, 0);
+      const cr = part(geo('rcry', () => new THREE.OctahedronGeometry(0.4)), fcry[i % 3], g, px, 5.85, 0);
+      cr.scale.set(0.85, 1.9, 0.85);
+    });
+    part(box(5.6, 0.55, 1.1), obsStone, g, 0, 5.55, 0);
+    prop(W, 'ph:large_iron_gate', 0.2, 10.3, { s: 1.45, y: 0.68, tint: 0x524864 });
+    addObs(W, -2.1, 10.2, 0.9); addObs(W, 2.5, 10.2, 0.9);
+  }
+  [[-5.4, 8.8], [5.8, 8.8]].forEach(([x, y]) => {
+    const ped = sg(W, x, y);
+    part(box(1.5, 0.85, 1.5), obsStone, ped, 0, 0.42, 0);
+    prop(W, 'ph:gothic_statue', x, y, { h: 3.4, y: 0.85, rot: x < 0 ? 0.38 : -0.38, tint: 0x564c68, obs: 1.05 });
+  });
+  [[-10.6, 7.8, 3.6], [10.8, 7.8, 4.1], [-12.2, 2.2, 2.5], [12.4, 2.0, 2.9], [-11.4, -5.8, 2.1], [11.6, -5.6, 2.6]].forEach(([x, y, h], i) => {
+    const g = sg(W, x, y, i * 0.7);
+    part(box(1.15, 0.45, 1.15), obsStone, g, 0, 0.22, 0);
+    part(cyl(0.42, 0.48, h, 14), colStone, g, 0, 0.45 + h / 2, 0);
+    const shard = part(geo('rcry', () => new THREE.OctahedronGeometry(0.4)), cryM[i % 3], g, 0, 0.95 + h, 0);
+    shard.scale.set(0.65, 1.6, 0.65);
+    addObs(W, x, y, 0.85);
+  });
+  [[-12.8, -2.2], [12.8, -2.0], [-9.4, 8.8], [9.8, 8.8]].forEach(([x, y], i) => prop(W, 'ph:rock_moss_set_01', x, y, { node: `rock0${(i % 5) + 1}`, rot: i * 1.3, s: 1.35, tint: 0x3e364c, obs: 0.95 }));
+  [[-11.8, -8.2], [12.0, -8.0]].forEach(([x, y], i) => prop(W, 'ph:rock_07', x, y, { rot: i * 1.7, s: 1.15, tint: 0x3a3248, shadow: false }));
+  [[-3.2, 9.5], [3.6, 9.5]].forEach(([x, y]) => prop(W, 'ph:lantern_chandelier_01', x, y, { y: 4.5, s: 1.2, tint: 0x685c80, obs: 0, shadow: false }));
   groundFog(W, 0x8c8a96, 0.15);
   motes(W, 0xd8c8ff, 8, 15, 4, 0.6);
   arenaDetail(W);
@@ -11805,6 +11919,7 @@ function updateVillager(e, dt) {
   if (e.bubble) { e.bubbleT -= dt; if (e.bubbleT <= 0) { removeLabel(e.bubble); e.bubble = null; } }
   if (e.path.length < 2) {
     // 제자리 주민: 서서 숨 쉬고, 기사가 가까우면 이따금 말을 건다
+    e.ch.travel = 0;
     e.ch.speed = lerp(e.ch.speed, 0, Math.min(1, dt * 6));
     if (e.lines && !e.bubble) {
       e.chatT = (e.chatT ?? rand(5, 10)) - dt;
@@ -11812,15 +11927,16 @@ function updateVillager(e, dt) {
     }
     return;
   }
-  if (e.pause > 0) { e.pause -= dt; e.ch.speed = lerp(e.ch.speed, 0, Math.min(1, dt * 6)); return; }
+  if (e.pause > 0) { e.pause -= dt; e.ch.travel = 0; e.ch.speed = lerp(e.ch.speed, 0, Math.min(1, dt * 6)); return; }
   const [tx, ty] = e.path[e.wp], dx = tx - e.sx, dy = ty - e.sy, d = Math.hypot(dx, dy);
   // 장애물에 막혀 2초 넘게 목표에 가까워지지 못하면 다음 지점으로 넘어간다
   if (d < (e.bestD ?? Infinity) - 0.02) { e.bestD = d; e.stuck = 0; } else e.stuck = (e.stuck || 0) + dt;
-  if (d < 0.1 || e.stuck > 2) { e.wp = (e.wp + 1) % e.path.length; e.pause = Math.random() < 0.4 ? rand(1.5, 4) : 0; e.stuck = 0; e.bestD = Infinity; return; }
-  const st = Math.min(d, dt * 1.25);
+  if (d < 0.1 || e.stuck > 2) { e.wp = (e.wp + 1) % e.path.length; e.pause = Math.random() < 0.4 ? rand(1.5, 4) : 0; e.stuck = 0; e.bestD = Infinity; e.ch.travel = 0; return; }
+  const ox = e.sx, oy = e.sy, st = Math.min(d, dt * 1.25);
   e.sx += (dx / d) * st; e.sy += (dy / d) * st;
   faceToward(e, dx, dy);
   pushOut(e);
+  e.ch.travel = Math.hypot(e.sx - ox, e.sy - oy);
   e.ch.speed = lerp(e.ch.speed, e.stuck > 0.3 ? 0 : 0.42, Math.min(1, dt * 6));
   setW(e.ch.root, e.sx, e.sy);
 }
