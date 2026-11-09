@@ -131,9 +131,11 @@ body:not(.started) #hud, body:not(.started) #labels { opacity: 0; visibility: hi
 
 /* 캐릭터 정보 */
 #pframe { position: absolute; top: 12px; left: var(--gl); display: flex; align-items: center; gap: 8px; }
-.portrait { position: relative; width: 62px; height: 62px; border-radius: 50%; padding: 3px; background: conic-gradient(from 210deg, #5e4421, #f0d08a, #7a5a2a, #e3be72, #5e4421); box-shadow: 0 3px 10px rgba(0, 0, 0, .6); flex: none; }
-.portrait svg { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #3b4a63, #121722 75%); display: block; }
-.portrait b { position: absolute; right: -4px; bottom: -3px; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 10px; background: linear-gradient(180deg, #7a1d17, #3d0c09); border: 1px solid var(--gold); font-family: var(--f-impact); font-weight: 400; font-size: 13px; line-height: 18px; text-align: center; color: #fff3d6; }
+.portrait { position: relative; width: 62px; height: 62px; border-radius: 50%; padding: 3px; background: conic-gradient(from 210deg, #3a2812, #c8a258, #4d3618, #a8823c, #2a1c0c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .85), 0 3px 12px rgba(0, 0, 0, .78); flex: none; }
+.portrait::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--portrait-url, none) center / cover no-repeat; box-shadow: inset 0 0 8px rgba(0, 0, 0, .85); pointer-events: none; }
+html[style*="--portrait-url"] .portrait svg { visibility: hidden; }
+.portrait svg { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #2e2319, #0d0a08 78%); display: block; }
+.portrait b { position: absolute; right: -4px; bottom: -3px; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 10px; background: linear-gradient(180deg, #681812, #2e0906); border: 1px solid #b89248; font-family: var(--f-impact); font-weight: 400; font-size: 13px; line-height: 18px; text-align: center; color: #f6e4bc; }
 .pinfo { display: grid; gap: 4px; width: 214px; }
 .pname { display: flex; align-items: baseline; gap: 8px; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
 .ptitle { font-family: var(--f-display); font-size: 16px; color: var(--gold-2); }
@@ -153,15 +155,15 @@ body:not(.started) #hud, body:not(.started) #labels { opacity: 0; visibility: hi
 
 /* 미니맵과 과목 상태 */
 .hud-tr { position: absolute; top: 12px; right: var(--gr); width: 176px; display: flex; flex-direction: column; gap: 8px; transition: right .25s ease; }
-.mmwrap { position: relative; width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; padding: 4px; background: conic-gradient(#6b5532, #f0d08a, #6b5532, #e3be72, #6b5532); box-shadow: 0 4px 14px rgba(0, 0, 0, .6); }
-#mm { width: 100%; height: 100%; border-radius: 50%; display: block; background: #121010; }
+.mmwrap { position: relative; width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; padding: 4px; background: conic-gradient(#423018, #c8a258, #362612, #a8823c, #423018); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .85), 0 4px 16px rgba(0, 0, 0, .75); }
+#mm { width: 100%; height: 100%; border-radius: 50%; display: block; background: #0d0b0a; box-shadow: inset 0 0 10px rgba(0, 0, 0, .9); }
 .mmwrap::after { content: "N"; position: absolute; top: -2px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: var(--gold-2); text-shadow: 0 1px 2px #000; }
 /* 아래를 지나는 몬스터 이름표와 글자가 겹쳐 읽히지 않도록 은은한 어두운 받침을 깐다 */
 #mminfo { text-align: center; line-height: 1.35; text-shadow: 0 1px 2px #000, 0 0 4px #000; padding: 3px 6px 4px; border-radius: 10px; background: radial-gradient(ellipse at center, rgba(10, 8, 6, .78) 35%, rgba(10, 8, 6, 0) 75%); }
 #mminfo b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 17px; color: var(--gold-2); white-space: nowrap; }
 #mminfo span { font-size: 12px; font-variant-numeric: tabular-nums; }
 #mminfo small { color: var(--muted); font-size: 11px; }
-#sbox { pointer-events: auto; background: rgba(10, 8, 6, .7); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--edge); border-radius: 3px; padding: 7px 9px 8px; font-size: 11.5px; }
+#sbox { pointer-events: auto; background: linear-gradient(180deg, rgba(22, 17, 13, .84), rgba(10, 8, 6, .88)); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--edge), 0 3px 10px rgba(0, 0, 0, .6); border-radius: 3px; padding: 7px 9px 8px; font-size: 11.5px; }
 #sbox.closed { padding: 5px 9px 6px; }
 .sb-h { display: block; width: 100%; background: none; border: 0; padding: 0; margin: 0 0 3px; text-align: left; cursor: pointer; color: var(--gold); font-family: var(--f-display); font-size: 14px; }
 #sbox.closed .sb-h { margin: 0; }
@@ -897,8 +899,8 @@ body.win-open #quest { display: none; }
 .np.mark { font-family: var(--f-impact); font-size: 26px; color: #ffd24a; text-shadow: 0 2px 0 #000, 0 0 8px rgba(255, 160, 40, .8); animation: mark .5s ease-out; }
 @keyframes mark { 0% { opacity: 0; } 30% { opacity: 1; } 45% { opacity: .55; } 60% { opacity: 1; } }
 .np.villager { color: #d8d2c6; font-weight: 500; font-size: 11.5px; }
-.np.bubble { max-width: 200px; white-space: normal; padding: 5px 9px 6px; border-radius: 8px; background: rgba(250, 245, 232, .94); color: #2a2016; text-shadow: none; font-size: 12px; font-weight: 500; line-height: 1.45; box-shadow: 0 2px 8px rgba(0, 0, 0, .45); animation: bubble .25s ease-out; }
-.np.bubble::after { content: ""; position: absolute; left: calc(50% + var(--ax, 0px)); bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-top-color: rgba(250, 245, 232, .94); border-bottom: 0; }
+.np.bubble { max-width: 200px; white-space: normal; padding: 5px 9px 6px; border-radius: 4px; background: linear-gradient(180deg, rgba(28, 22, 16, .95), rgba(14, 11, 8, .95)); border: 1px solid #7a5c32; color: #ebd9b4; text-shadow: 0 1px 1px #000; font-size: 12px; font-weight: 500; line-height: 1.45; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .75), 0 3px 10px rgba(0, 0, 0, .7); animation: bubble .25s ease-out; }
+.np.bubble::after { content: ""; position: absolute; left: calc(50% + var(--ax, 0px)); bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-top-color: #7a5c32; border-bottom: 0; }
 @keyframes bubble { from { opacity: 0; } }
 .np.hover::after { content: ""; display: block; height: 1px; margin-top: 1px; background: currentColor; opacity: .8; }
 .np .hpb { display: none; width: 52px; height: 5px; margin: 2px auto 0; background: #120c0a; border: 1px solid #000; }
@@ -3368,9 +3370,10 @@ function hudEls() {
   const pf = $('#pframe'), xb = $('#expbar');
   if (hud && hud.ok && hud.root === pf) return hud;
   pf.innerHTML = `
-    <div class="portrait" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="pfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9edf2"/><stop offset="1" stop-color="#6d7680"/></linearGradient></defs>
-      <path d="M32 9c-11 0-18 8-18 19v12c0 3 2 6 5 7l4 2h18l4-2c3-1 5-4 5-7V28c0-11-7-19-18-19z" fill="url(#pfg)" stroke="#20242a" stroke-width="2"/>
-      <path d="M19 31h26v4H35v12h-6V35H19z" fill="#14171b"/><path d="M32 9c3 3 4 7 4 10h-8c0-3 1-7 4-10z" fill="#b8302a"/></svg><b></b></div>
+    <div class="portrait" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="pfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a7e6e"/><stop offset="0.55" stop-color="#3c352e"/><stop offset="1" stop-color="#181411"/></linearGradient></defs>
+      <path d="M12 56c2-9 9-14 20-14s18 5 20 14H12z" fill="#231d18" stroke="#4a3b28" stroke-width="1.5"/>
+      <path d="M32 9c-11 0-17 8-17 19v12c0 3 2 6 5 7l4 2h16l4-2c3-1 5-4 5-7V28c0-11-6-19-17-19z" fill="url(#pfg)" stroke="#14100d" stroke-width="2"/>
+      <path d="M19 31h26v3.5H34.5v12.5h-5V34.5H19z" fill="#0b0907"/><path d="M22 32.2h7v1.4h-7zm13 0h7v1.4h-7z" fill="#d87a28" opacity=".75"/><path d="M32 7c3.5 3.5 4.5 7.5 4.5 11h-9c0-3.5 1-7.5 4.5-11z" fill="#7c1c14"/></svg><b></b></div>
     <div class="pinfo">
       <div class="pname"><span class="ptitle"></span><span class="plv"></span></div>
       <div class="gbar hp" role="meter" aria-label="HP" aria-valuemin="0" aria-valuemax="500"><b class="lag"></b><i></i><span></span></div>
@@ -4955,7 +4958,7 @@ let WARM_GEO = null, WARM_TEX = null, WPAR = null;
 const WST = { gen: 0, keep: [], own: [], state: 'idle', n: 0, ms: 0, t0: 0, fail: 0 };
 const WCLS = { std: THREE.MeshStandardMaterial, phys: THREE.MeshPhysicalMaterial, basic: THREE.MeshBasicMaterial, points: THREE.PointsMaterial };
 // 갈래 → [재질 속성, 값] ('tex'는 대역 텍스처)
-const WTOK = { map: ['map', 'tex'], nrm: ['normalMap', 'tex'], emi: ['emissiveMap', 'tex'], rgh: ['roughnessMap', 'tex'], ds: ['side', THREE.DoubleSide], tr: ['transparent', true],
+const WTOK = { map: ['map', 'tex'], nrm: ['normalMap', 'tex'], emi: ['emissiveMap', 'tex'], rgh: ['roughnessMap', 'tex'], mtl: ['metalnessMap', 'tex'], ds: ['side', THREE.DoubleSide], tr: ['transparent', true],
   add: ['blending', THREE.AdditiveBlending], at: ['alphaTest', 0.05], flat: ['flatShading', true], vc: ['vertexColors', true], cc: ['clearcoat', 1] };
 // 갈래 글자 → 대역 메시 ('std map nrm rim tr' 등). rim은 캐릭터 가장자리 빛(view-charshader의 addRim)
 function warmShape(spec) {
@@ -8126,8 +8129,17 @@ function decorateMonster(R, model, z, zc, fix, place = z) {
 function applyGear(R, gear) {
   if (!R || !gear) return;
   if (R.skin) { skinGear(R, gear); return; }
-  if (R.spr) return;
   const sw = gear.sword || 0, hm = gear.helm || 0, ar = gear.armor || 0, sh = gear.shield || 0;
+  if (R.spr) {
+    R.gearLv = { sw, hm, ar, sh };
+    if (R.mat) {
+      const m = Math.max(hm, ar, sh);
+      if (m >= 9) R.mat.emissive.setRGB(0.46, 0.42, 0.36);
+      else if (m >= 7) R.mat.emissive.setRGB(0.42, 0.43, 0.46);
+      else R.mat.emissive.setRGB(0.4, 0.4, 0.4);
+    }
+    return;
+  }
   const w = R.weapon && R.weapon.userData;
   if (w) {
     const col = sw >= 9 ? new THREE.Color(1.0, 0.32, 0.12) : sw >= 7 ? new THREE.Color(0.35, 0.65, 1.0) : new THREE.Color(0.55, 0.8, 1.0);
@@ -9194,10 +9206,18 @@ function propPrep() {
       o.geometry.userData.shared = true;
       ASSET_GEO.add(o.geometry);
       const m = o.material;
+      m.userData.skinKey = `prop|${n}|${o.name}`;
       ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap'].forEach((k) => { if (m[k]) { m[k].anisotropy = maxAniso; ASSET_TEX.add(m[k]); } });
     });
   });
 }
+WARM.add(() => {
+  const out = [], seen = new Set();
+  const addM = (m) => { if (!m || seen.has(m)) return; seen.add(m); skinKeep(m); out.push(m); };
+  Object.values(PROP.gl).forEach((sc) => sc.traverse((o) => { if (o.isMesh) addM(o.material); }));
+  PROP.mats.forEach((m, k) => { m.userData.skinKey = `pmat|${k}`; addM(m); });
+  return out;
+});
 // 소품 하나: opt { rot(돌림), s(크기, 기본 KayKit 비율·Poly Haven은 PH_S), node(이 이름이 든 메시만: 묶음 모델에서 하나 고르기), h(높이로 맞추기: 크기가 제각각인 Quaternius), y(띄우기), obs(부딪힘 반지름), shadow(그림자, 기본 켬),
 //                 mat(원래 재질 → 바꿀 재질. 같은 열쇠 matKey면 사본을 하나만 만든다) }
 function prop(W, n, sx, sy, o = {}) {
@@ -9311,11 +9331,11 @@ const SPR = { on: false, tex: {}, def: {
   golem: { file: 'spr/golem.webp', rows: 3, h: 3.3, top: 2.6, aspect: 320 / 400, foot: 0.05,
     walk: { row: 3, frames: 4, stride: 1.2 },
     act: { 'golem.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
-  slime: { file: 'spr/slime.webp', rows: 3, h: 2.2, top: 1.35, aspect: 320 / 400, foot: 0.05,
+  slime: { file: 'spr/slime.webp', rows: 3, h: 2.2, top: 1.35, aspect: 320 / 400, foot: 0.05, stride: 0.85,
     act: { 'slime.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
-  bat: { file: 'spr/bat.webp', rows: 3, h: 3.6, top: 2.3, aspect: 320 / 400, foot: 0.05,
+  bat: { file: 'spr/bat.webp', rows: 3, h: 3.6, top: 2.3, aspect: 320 / 400, foot: 0.05, stride: 0.95,
     act: { 'bat.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
-  guard: { file: 'spr/guard.webp', rows: 3, h: 2.9, top: 2.45, aspect: 320 / 400, foot: 0.05,
+  guard: { file: 'spr/guard.webp', rows: 3, h: 2.9, top: 2.45, aspect: 320 / 400, foot: 0.05, stride: 1.05,
     act: { 'guard.attack': 1, hurt: [2, 0, 1], die: [2, 0, 3] } },
 } };
 for (const [kind, action] of Object.entries({ wizard: 'cast', healer: 'cast', smith: 'hammer', captain: null,
@@ -9341,7 +9361,7 @@ const SPR_FLIP = 0.2, sprFlip = (prev, side) => (prev === undefined ? (side > 0 
 // 게시본은 늘 생성 스프라이트를 쓴다. 로컬 사본(DEV)은 확인 스크립트가 3D 기사의 칼끝을 재므로 주소에 ?spr가 있을 때만
 // 그림 하나를 그 종류의 개체가 모두 같이 쓰고, 칸은 개체마다 판의 UV로 고른다 (그림을 개체마다 복제하면 Texture.copy가 같은 원본을 다시 올리게 해 나올 때마다 큰 그림을 GPU에 다시 보낸다)
 // 칸 수(cols)는 그림 폭 / 320 (앞모습만 4칸, 뒷모습까지 8칸). 첫 장면을 지은 뒤(SKIN.done)에 다 읽으면 켜지 않는다: 3D와 그림이 한 장면에 섞이지 않게
-const SPR_WANT = !DEV || (typeof location !== 'undefined' && /[?&]spr(=|&|$)/.test(location.search));
+const SPR_WANT = !DEV || (typeof location !== 'undefined' && (/[?&]spr(=|&|$)/.test(location.search) || (!/[?&](3d|nospr)(=|&|$)/.test(location.search) && !/^#(demo|lookdev)/.test(location.hash))));
 const SPR_LOAD = SPR_WANT
   ? Promise.all(Object.entries(SPR.def).map(([k, d]) => new THREE.TextureLoader().loadAsync(ASSET_BASE + d.file).then((tx) => {
     tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = maxAniso; tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping; ASSET_TEX.add(tx);
@@ -9385,6 +9405,7 @@ function sprRig(kind, opt = {}) {
     mat.defines.CH_GEL = 1;
     mat.userData.gelColor = new THREE.Color(opt.fix ? 0xc75c48 : opt.zoneColor);
   }
+  mat.userData.skinKey = mat.defines.CH_GEL ? 'spr|slime' : 'spr|char';
   if (opt.fix) mat.emissive.setRGB(0.54, 0.37, 0.34);
   const plane = new THREE.Mesh(g, mat);
   // 그림자 지도도 현재 칸의 UV와 alphaTest를 써서 몸 윤곽만 바닥에 드리운다.
@@ -9392,7 +9413,7 @@ function sprRig(kind, opt = {}) {
   // 받지는 않는다: 카메라를 보는 판이 제 윤곽 그림자(와 옆 판의 그림자)를 제 몸에 얼룩으로 받지 않게
   plane.castShadow = true; plane.receiveShadow = false;
   body.add(plane);
-  return { root, body, kind, plane, uv: g.attributes.uv, frame: -1, def: D, height: D.top || H * 0.85, spr: true, y0: 0, zc: opt.zoneColor !== undefined || opt.fix ? new THREE.Color(opt.fix ? 0xff5a3a : opt.zoneColor) : null, disY: [-D.foot * H, D.top || H * (1 - D.foot)] };
+  return { root, body, kind, plane, mat, uv: g.attributes.uv, frame: -1, def: D, height: D.top || H * 0.85, spr: true, y0: 0, zc: opt.zoneColor !== undefined || opt.fix ? new THREE.Color(opt.fix ? 0xff5a3a : opt.zoneColor) : null, disY: [-D.foot * H, D.top || H * (1 - D.foot)] };
 }
 // 한 프레임: 카메라를 보게 돌리고, 보는 방향에 따라 좌우를 뒤집고, 동작에 맞는 칸을 고른다
 // 달리기는 빠르기(c.speed)만큼 칸을 넘기고 c.phase를 늘린다 (발소리, view-audio의 audSteps가 π마다 한 걸음)
@@ -9448,10 +9469,28 @@ function sprPose(c, d, t) {
   } else if (D.walk && D.rows > D.walk.row && D.cols === 8 && c.travel > 1e-7) {
     R.walkPhase = walkPhase(R.walkPhase || 0, c.travel, D.walk.stride);
     row = D.walk.row; col = Math.floor(R.walkPhase * D.walk.frames);
+  } else if (D.stride && c.travel > 1e-7) {
+    R.walkPhase = walkPhase(R.walkPhase || 0, c.travel, D.stride);
+    col = Math.floor(R.walkPhase * 4) % 4;
+    if (!calmFx()) {
+      const w = R.walkPhase * Math.PI * 2;
+      if (c.kind === 'slime') {
+        const hop = Math.max(0, Math.sin(w));
+        R.body.position.y = R.y0 + hop * 0.08;
+        R.body.scale.set(1 - (hop - 0.3) * 0.05, 1 + (hop - 0.3) * 0.08, 1);
+      } else if (c.kind === 'guard') {
+        R.body.position.y = R.y0 + (1 - Math.abs(Math.cos(w))) * 0.045;
+      } else if (c.kind === 'bat') {
+        R.body.position.y = R.y0 + Math.sin(w) * 0.06;
+      }
+    }
   } else if ((c.speed || 0) > 0.15 && D.act.run !== undefined) {
     c.phase += d * Math.PI * 2 * 1.5 * Math.min(1.3, c.speed);
     row = D.act.run; col = Math.floor(c.phase / (Math.PI / 2)) % 4;
     if (extended && Math.floor(c.phase / (Math.PI / 4)) % 2) extraRow = 7;
+  } else if (D.walking && !calmFx()) {
+    if ((c.speed || 0) >= 0.15) R.body.position.y = R.y0 + (1 - Math.abs(Math.cos(t * 5.2 + c.seed))) * 0.028;
+    else R.body.scale.y = 1 + Math.sin(t * 2.2 + c.seed * 6.28) * 0.012;
   }
   // 칸 → 판의 UV (바뀔 때만). 8칸 그림은 뒤 4칸이 뒷모습
   const cols = D.cols || 4, backCol = R.back && cols === 8 ? 4 : 0;
@@ -9614,6 +9653,19 @@ function skinMonColor(kind, m, zc, fix) {
 // 셰이더 프로그램은 그것을 쓰는 재질이 모두 버려지면 풀린다. 종류의 마지막 몬스터가 사라질 때 풀려 다음에 나올 때 다시 만들면 그 순간 끊긴다
 const SKIN_KEEP = new Map();
 function skinKeep(m) { if (SKIN_KEEP.has(m.userData.skinKey)) return false; SKIN_KEEP.set(m.userData.skinKey, m); return true; }
+WARM.add(() => {
+  if (!SPR.on) return [];
+  const mk = (gel) => {
+    const g = new THREE.PlaneGeometry(1, 1);
+    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(12).fill(1), 3));
+    const m = new THREE.MeshStandardMaterial({ map: WARM_TEX, emissiveMap: WARM_TEX, alphaTest: 0.5, side: THREE.DoubleSide });
+    m.defines = gel ? { CH_SPRITE: 1, CH_GEL: 1 } : { CH_SPRITE: 1 };
+    if (gel) m.userData.gelColor = new THREE.Color(1, 1, 1);
+    addRim(m);
+    return new THREE.Mesh(g, m);
+  };
+  return [mk(false), mk(true)];
+});
 // Char가 만든 뒤: 사라짐 높이 범위를 모델 공간으로
 function skinDisY(ch) { const R = ch.rig; if ((R.skin || R.spr) && R.disY) ch.U.disY.value.set(R.disY[0], R.disY[1]); }
 
@@ -9922,15 +9974,19 @@ const CHARLOOK = {
   rift: { key: 1.2, neut: [0.7, 0.25] },
 };
 const toGray = (c, k) => { const l = c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722; return c.lerp(new THREE.Color(l, l, l), k); };
+const SPR_LIGHT = {
+  town: [[1.12, 0.96, 0.82], [0.92, 0.96, 1.04]],
+  s1: [[0.94, 0.98, 1.14], [0.88, 0.94, 1.08]],
+  s2: [[1.38, 0.89, 0.70], [1.0, 1.0, 1.0]],
+  s3: [[1.10, 0.97, 0.84], [0.90, 0.98, 0.96]],
+  s4: [[0.95, 0.98, 1.00], [0.78, 0.99, 1.34]],
+  rift: [[1.12, 0.88, 1.18], [0.90, 0.88, 1.06]],
+};
 // 새 장면: 캐릭터 조명 묶음과 기사 둘레 빛 (장면을 다 지은 뒤 첫 그리기 전에 맞춘다)
 onBuild((W, kind) => {
-  spriteGroundLight.value.set(1, 1, 1);
-  spriteSkyLight.value.set(1, 1, 1);
-  if (kind === 's2') spriteGroundLight.value.set(1.38, 0.89, 0.70);
-  if (kind === 's4') {
-    spriteGroundLight.value.set(0.95, 0.98, 1.00);
-    spriteSkyLight.value.set(0.78, 0.99, 1.34);
-  }
+  const sl = SPR_LIGHT[kind] || [[1, 1, 1], [1, 1, 1]];
+  spriteGroundLight.value.set(...sl[0]);
+  spriteSkyLight.value.set(...sl[1]);
   const z = ZCFG[kind], L = CHARLOOK[kind] || CHARLOOK.town, zc = z.char || {}, rk = z.rim[1];
   const P = RIM_PC, Mo = RIM_MON, key = zc.key || [0xfff2e0, L.key], r2 = zc.rim2 || [0xbcd0ff, 0.35], mr = z.monRim || z.rim;
   P.keyC.value.set(key[0]); P.keyK.value = key[1];
@@ -10469,7 +10525,7 @@ function arenaDetail(W) {
 // 장소 재질의 셰이더 갈래 (WARM). 장소 코드에 새 갈래(맵 조합, 양면, 반투명, 인스턴스 …)를 더하면 여기에도 더한다. checks/t-r-warm.js가 빠진 갈래를 찾아 준다
 // 바닥·벽(map nrm, 발광 emi), 단색 소품, 물(nrm tr), 문자판·석비(map), 낱장(map ds), 깃발(map ds tr at), 결정·바위(flat), 룬 고리·소용돌이(basic add),
 // 바닥 안개(basic map tr, 보통·높음에서만 보인다), 성벽 총안(inst), 꽃(inst icol), 별(points), 풀(바람 셰이더, inst icol)
-WARM.add(['std', 'std ds', 'std tr', 'std flat', 'std map', 'std map ds', 'std map ds tr at', 'std map nrm', 'std map nrm ds', 'std map nrm inst', 'std map nrm emi', 'std nrm emi', 'std nrm tr', 'std inst icol',
+WARM.add(['std', 'std ds', 'std tr', 'std flat', 'std map', 'std map ds', 'std map ds tr at', 'std map emi ds at', 'std map nrm', 'std map nrm ds', 'std map nrm inst', 'std map nrm emi', 'std map nrm rgh', 'std map nrm rgh ds', 'std map nrm rgh inst', 'std map nrm rgh mtl', 'std nrm emi', 'std nrm tr', 'std inst icol',
   'basic', 'basic map tr', 'basic map tr add', 'basic tr add', 'points']);
 // 싸움터 바닥 디테일 (arenaDetail): 판마다 색·세기를 RGBA 정점 색에 담은 얼룩 덩어리와 웅덩이. 정점 색에 투명도가 있으면 셰이더 갈래가 달라서
 // 갈래 글자('vc')의 대역 도형(정점 색 없음)으로는 맞지 않는다. RGBA 정점 색을 가진 도형으로 따로 만든다
@@ -10477,7 +10533,7 @@ WARM.add(() => {
   const g = new THREE.PlaneGeometry(1, 1);
   g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(16).fill(1), 4));
   const o = { map: WARM_TEX, vertexColors: true, transparent: true };
-  return [new THREE.Mesh(g, new THREE.MeshBasicMaterial(o)), new THREE.Mesh(g, new THREE.MeshStandardMaterial(o))];
+  return [new THREE.Mesh(g, new THREE.MeshBasicMaterial(o)), new THREE.Mesh(g, new THREE.MeshStandardMaterial(o)), new THREE.Mesh(g, new THREE.MeshStandardMaterial({ ...o, emissiveMap: WARM_TEX }))];
 });
 WARM.add(() => { const im = new THREE.InstancedMesh(WARM_GEO, tuftMat(), 1); im.setColorAt(0, new THREE.Color()); return im; });
 // 깃발 그림자 (보통·높음): 알파를 잘라내는 재질은 three가 그림자용 깊이 재질을 재질마다 따로 만들고 그 재질과 함께 버린다
@@ -10496,6 +10552,9 @@ function matKit() {
   };
 }
 function crate(W, K, sx, sy, s = 0.7, rot = 0) {
+  const kind = (Math.round(sx * 7 + sy * 13) & 1) ? 'ph:old_military_crate' : 'ph:wooden_crate_02';
+  const p = prop(W, kind, sx, sy, { h: s * 0.95, rot, obs: s * 0.7 });
+  if (p) return p;
   const g = sg(W, sx, sy, rot);
   part(box(s, s, s), K.wood, g, 0, s / 2, 0);
   const b = stdM(0x3a2616, 0.8);
@@ -10504,6 +10563,7 @@ function crate(W, K, sx, sy, s = 0.7, rot = 0) {
   return g;
 }
 function barrel(W, K, sx, sy, s = 1) {
+  if (prop(W, 'ph:wine_barrel_01', sx, sy, { h: 0.88 * s, rot: rand(0, TAU), obs: 0.45 * s })) return;
   const g = sg(W, sx, sy, rand(0, TAU));
   const pts = [[0.26, 0], [0.32, 0.2], [0.34, 0.42], [0.32, 0.64], [0.26, 0.84]].map(([x, y]) => new THREE.Vector2(x * s, y * s));
   part(geo(`barrel${s}`, () => new THREE.LatheGeometry(pts, 16)), K.wood, g);
@@ -10577,7 +10637,16 @@ function bannerTex(field, emblem, mark) {
       g.beginPath(); g.moveTo(64, 70); g.bezierCurveTo(110, 130, 90, 190, 64, 230); g.bezierCurveTo(38, 190, 18, 130, 64, 70); g.fill();
       g.fillStyle = field; g.beginPath(); g.moveTo(64, 140); g.bezierCurveTo(80, 165, 76, 195, 64, 215); g.bezierCurveTo(52, 195, 48, 165, 64, 140); g.fill();
     } else {
-      g.font = 'bold 56px serif'; g.textAlign = 'center'; g.fillText(mark, 64, 170);
+      // 성채 문장: 검과 천칭 문양 (한글 글자 대신 중세 고딕 문장)
+      g.lineWidth = 5;
+      g.fillRect(60, 68, 8, 156);
+      g.fillRect(28, 108, 72, 7);
+      g.beginPath(); g.moveTo(64, 52); g.lineTo(76, 72); g.lineTo(52, 72); g.closePath(); g.fill();
+      [34, 94].forEach((cx) => {
+        g.beginPath(); g.moveTo(cx, 114); g.lineTo(cx - 14, 156); g.lineTo(cx + 14, 156); g.closePath(); g.stroke();
+        g.beginPath(); g.arc(cx, 160, 16, 0, Math.PI); g.fill();
+      });
+      g.beginPath(); g.arc(64, 111, 10, 0, TAU); g.fill();
     }
   });
 }
@@ -10826,36 +10895,66 @@ function buildTown() {
   lamp(W, K, -5.2, -4.6, true); lamp(W, K, 3.2, -6.4, false); lamp(W, K, -7.0, 6.8, false); lamp(W, K, 7.4, 7.2, true);
   teleCircle(W, 7.3, 5.4);
   addSpot(W, 'tele', 7.3, 5.4);
-  // 치유사의 사당
+  // 치유사의 사당 (풍화된 고딕 석조 성소)
   {
     const g = sg(W, -7.9, 8.2);
-    const marble = stdM(0xe6e1d6, 0.55);
-    part(cyl(2.0, 2.2, 0.35, 28), K.stone, g, 0, 0.17, 0);
-    for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU; part(cyl(0.15, 0.18, 2.6, 12), marble, g, Math.cos(a) * 1.55, 1.65, Math.sin(a) * 1.55); }
-    part(cyl(1.85, 1.85, 0.22, 28), marble, g, 0, 3.0, 0);
-    part(geo('dome', () => new THREE.SphereGeometry(1.7, 24, 12, 0, TAU, 0, Math.PI / 2)), stdM(0x6f93b8, 0.5, 0.3), g, 0, 3.1, 0);
-    part(cyl(0.3, 0.4, 0.9, 8), marble, g, 0, 0.8, 0);
-    const cr = part(geo('hcrys', () => new THREE.OctahedronGeometry(0.32)), emit(W, emiM(0x9ad8ff, 3, 0x123048), 'ui'), g, 0, 1.65, 0);
+    const marble = texMatR('brick', 256, [1.2, 2.2], { roughness: 0.88 }, { seed: 21, a: [88, 84, 76], b: [122, 116, 106] });
+    const domeM = texMatR('roof', 256, [2, 1], { roughness: 0.85 }, { seed: 22, a: [42, 48, 56], b: [64, 72, 84] });
+    surfUpgrade(marble, 'blocks', 1.2, 2.2, { tint: 0x948c7e });
+    surfUpgrade(domeM, 'castle', 2, 1, { tint: 0x58626e });
+    part(cyl(2.05, 2.25, 0.35, 24), K.stone, g, 0, 0.17, 0);
+    part(cyl(1.72, 1.85, 0.18, 24), K.stoneDark, g, 0, 0.38, 0);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * TAU, cx = Math.cos(a) * 1.55, cz = Math.sin(a) * 1.55;
+      part(box(0.46, 0.24, 0.46), K.stoneDark, g, cx, 0.48, cz);
+      part(cyl(0.16, 0.19, 2.35, 12), marble, g, cx, 1.72, cz);
+      part(box(0.44, 0.22, 0.44), K.stoneDark, g, cx, 2.92, cz);
+    }
+    part(cyl(1.88, 1.95, 0.24, 24), marble, g, 0, 3.08, 0);
+    part(geo('dome', () => new THREE.SphereGeometry(1.72, 24, 12, 0, TAU, 0, Math.PI / 2)), domeM, g, 0, 3.16, 0);
+    part(cyl(0.14, 0.22, 0.45, 8), K.iron, g, 0, 4.98, 0);
+    part(box(0.75, 0.28, 0.75), K.stoneDark, g, 0, 0.52, 0);
+    part(cyl(0.32, 0.4, 0.75, 8), marble, g, 0, 0.92, 0);
+    prop(W, 'ph:gothic_statue', -7.9, 9.25, { h: 1.85, y: 0.35, rot: 0 });
+    const cr = part(geo('hcrys', () => new THREE.OctahedronGeometry(0.32)), emit(W, emiM(0x9ad8ff, 3, 0x123048), 'ui'), g, 0, 1.68, 0);
     cr.scale.y = 1.7; cr.userData.dyn = true;
     const l = pLight(W, w2(-7.9, 8.2, 1.8), 0x9ad8ff, 6, 8);
-    W.updaters.push((dt, t) => { cr.rotation.y += dt * 0.8; cr.position.y = 1.65 + Math.sin(t * 1.6) * 0.08; l.intensity = 5.5 + Math.sin(t * 2) * 0.8; });
+    W.updaters.push((dt, t) => { cr.rotation.y += dt * 0.8; cr.position.y = 1.68 + Math.sin(t * 1.6) * 0.08; l.intensity = 5.5 + Math.sin(t * 2) * 0.8; });
     const hp = w2(-7.9, 8.2, 1.6), hc = C(0x9ad8ff, 2);
     W.updaters.push((dt) => { if (Math.random() < dt * 6 * fxScale()) FX.emit(hp.x + rand(-0.4, 0.4), hp.y, hp.z + rand(-0.4, 0.4), { vy: rand(0.3, 0.6), c: hc, life: 2, s: 0.08, s1: 0 }); });
     addObs(W, -7.9, 8.2, 2.3);
   }
-  // 대장간: 화로와 모루
+  // 대장간: 화로와 모루 (오목한 석조 아궁이와 숯불, 담금질 통, 연장 상자)
   {
+    surfUpgrade(K.stoneDark, 'dbrick', 1.4, 1.4, { tint: 0xb8a898, gain: 1.45 });
     const g = sg(W, 9.2, -1.3, -0.5);
-    part(box(2.0, 1.2, 1.5), K.stoneDark, g, 0, 0.6, 0);
-    part(box(1.0, 0.45, 0.2), emit(W, emiM(0xff6a1a, 3.4, 0x200800), 'src'), g, 0, 0.75, 0.68);
-    part(box(0.9, 2.6, 0.9), K.stoneDark, g, 0.35, 2.2, -0.2);
-    const fp = g.localToWorld(new THREE.Vector3(0, 1.0, 0.75));
-    fire(W, fp, 0.6);
-    smokeStack(W, g.localToWorld(new THREE.Vector3(0.35, 3.6, -0.2)), 3, 0x4a4440, 1);
+    // 아궁이 받침과 좌우 돌기둥, 뒷벽, 후드와 굴뚝
+    part(box(2.2, 0.55, 1.65), K.stoneDark, g, 0, 0.275, 0);
+    [-0.78, 0.78].forEach((x) => part(box(0.54, 0.85, 1.5), K.stoneDark, g, x, 0.95, -0.04));
+    part(box(1.1, 0.85, 0.45), K.stoneDark, g, 0, 0.95, -0.55);
+    part(box(1.05, 0.75, 0.9), stdM(0x0d0907, 0.98), g, 0, 0.92, -0.08);
+    part(box(2.15, 0.36, 1.58), K.stoneDark, g, 0, 1.52, -0.02);
+    part(box(1.65, 0.45, 1.25), K.stoneDark, g, 0.15, 1.9, -0.1);
+    part(box(0.95, 2.2, 0.95), K.stoneDark, g, 0.35, 3.1, -0.2);
+    part(box(1.1, 0.18, 1.1), K.iron, g, 0.35, 4.22, -0.2);
+    for (let i = -2; i <= 2; i++) part(cyl(0.025, 0.025, 0.36, 6), K.iron, g, i * 0.22, 0.68, 0.62);
+    part(box(1.12, 0.05, 0.06), K.iron, g, 0, 0.82, 0.62);
+    const coal = emit(W, emiM(0xb84818, 1.2, 0x2a1208), 'src');
+    assetPack('s2lava', PACK_S2.lava).then((t) => {
+      if (t) assetUpgrade(coal, { map: t.map, emissiveMap: t.emi, normalMap: t.normalMap, color: 0xadaa9d, emissive: 0xff8a38, roughness: 0.92 });
+    });
+    for (let i = 0; i < 6; i++) {
+      const rx = -0.35 + (i % 3) * 0.35, rz = 0.08 + Math.floor(i / 3) * 0.28;
+      const e = part(rockGeo(1, i), coal, g, rx, 0.64, rz);
+      e.scale.set(0.28, 0.12, 0.22); e.rotation.y = i * 1.1;
+    }
+    const fp = g.localToWorld(new THREE.Vector3(0, 0.82, 0.25));
+    fire(W, fp, 0.65);
+    smokeStack(W, g.localToWorld(new THREE.Vector3(0.35, 4.3, -0.2)), 3, 0x4a4440, 1);
     pLight(W, w2(9.2, -0.3, 1.3), 0xff7a2a, 9, 9, { flicker: true });
     addObs(W, 9.2, -1.3, 1.5);
     const a = sg(W, 5.2, -3.4, -0.28);
-    const cast = stdM(0x818783, 0.78, 0.40), face = stdM(0xaab0ac, 0.50, 0.52);
+    const cast = stdM(0x464a4e, 0.72, 0.65), face = stdM(0x6e747a, 0.44, 0.78);
     cast.normalMap = face.normalMap = texSet('hammer', 128).normalMap;
     cast.normalScale.setScalar(0.65); face.normalScale.setScalar(0.28);
     part(cyl(0.35, 0.40, 0.48, 14), K.wood, a, 0, 0.24, 0);
@@ -10876,9 +10975,11 @@ function buildTown() {
     horn.rotation.z = Math.PI / 2; horn.scale.x = 0.62;
     addSpot(W, 'anvil', 5.2, -3.4);
     addObs(W, 5.2, -3.4, 0.5);
+    prop(W, 'ph:wooden_bucket_01', 4.35, -3.05, { h: 0.48, rot: 0.4, shadow: false });
+    prop(W, 'ph:metal_tool_chest', 6.45, -2.55, { h: 0.52, rot: -0.35, obs: 0.45 });
     const rack = sg(W, 8.8, -4.6, -0.2);
     part(box(1.6, 0.08, 0.08), K.wood, rack, 0, 1.1, 0); part(box(0.08, 1.2, 0.08), K.wood, rack, -0.75, 0.6, 0); part(box(0.08, 1.2, 0.08), K.wood, rack, 0.75, 0.6, 0);
-    const sm = { blade: stdM(0xcfd6de, 0.25, 1), gold: K.gold, leather: stdM(0x4a2f1b, 0.8) };
+    const sm = { blade: stdM(0xb8c0c8, 0.32, 0.92), gold: K.gold, leather: stdM(0x3a2414, 0.85) };
     [-0.45, 0, 0.45].forEach((x) => { const s = makeSword(sm, 0.8); s.position.set(x, 0.1, 0.06); rack.add(s); });
     addObs(W, 8.8, -4.6, 0.9);
   }
@@ -10893,9 +10994,13 @@ function buildTown() {
     cren.castShadow = true; g.add(cren);
     part(box(3.2, 3.6, 0.2), stdM(0x0d0a08, 1), g, 0, 1.8, 0.82);
     part(geo('arch', () => new THREE.CylinderGeometry(1.6, 1.6, 0.2, 24, 1, false, -Math.PI / 2, Math.PI)), stdM(0x0d0a08, 1), g, 0, 3.6, 0.82).rotation.x = Math.PI / 2;
-    for (let i = -3; i <= 3; i++) part(box(0.07, 3.8, 0.07), K.iron, g, i * 0.45, 2.3, 0.95);
-    for (let j = 0; j < 4; j++) part(box(3.0, 0.07, 0.07), K.iron, g, 0, 0.8 + j * 1.0, 0.95);
-    const roofM = stdM(0x2c3e6a, 0.7);
+    if (!prop(W, 'ph:large_iron_gate', 1.5, 13.7, { h: 3.8, rot: 0 })) {
+      for (let i = -3; i <= 3; i++) part(box(0.07, 3.8, 0.07), K.iron, g, i * 0.45, 2.3, 0.95);
+      for (let j = 0; j < 4; j++) part(box(3.0, 0.07, 0.07), K.iron, g, 0, 0.8 + j * 1.0, 0.95);
+    }
+    prop(W, 'ph:kite_shield', -1.7, 12.8, { h: 0.95, y: 2.8, rot: 0, shadow: false });
+    prop(W, 'ph:kite_shield', 4.7, 12.8, { h: 0.95, y: 2.8, rot: 0, shadow: false });
+    const roofM = stdM(0x282e38, 0.82, 0.15);
     [[-3.2, 7.5], [3.2, 7.5], [-16, 6.5], [17, 6.5]].forEach(([x, h]) => {
       part(cyl(1.5, 1.7, h, 18), wallM, g, x, h / 2, 0.3);
       part(geo(`troof${h}`, () => new THREE.ConeGeometry(1.95, 2.6, 18)), roofM, g, x, h + 1.3, 0.3);
@@ -10907,20 +11012,28 @@ function buildTown() {
     pLight(W, w2(1.5, 12.0, 2.2), 0xff8a3a, 8, 9, { flicker: true });
   }
   house(W, K, -11.5, 1.8, { rot: 0.35, roofSeed: 1 });
-  house(W, K, -11.2, -5.6, { rot: -0.2, w: 3.6, d: 3.2, roofSeed: 2, roofA: [46, 70, 110], roofB: [70, 100, 150] });
-  house(W, K, 12.6, 5.0, { rot: -0.4, roofSeed: 3, roofA: [80, 96, 46], roofB: [110, 130, 64] });
+  house(W, K, -11.2, -5.6, { rot: -0.2, w: 3.6, d: 3.2, roofSeed: 2, roofA: [46, 54, 68], roofB: [66, 76, 94] });
+  house(W, K, 12.6, 5.0, { rot: -0.4, roofSeed: 3, roofA: [58, 64, 48], roofB: [82, 90, 66] });
   house(W, K, -6.5, 12.0, { rot: 0.1, w: 3.4, d: 3, roofSeed: 4 });
-  house(W, K, 9.5, 11.0, { rot: -0.15, w: 3.2, d: 3, roofSeed: 5, roofA: [110, 60, 40], roofB: [150, 86, 56] });
-  // 시장 좌판
+  house(W, K, 9.5, 11.0, { rot: -0.15, w: 3.2, d: 3, roofSeed: 5, roofA: [82, 54, 42], roofB: [112, 74, 56] });
+  // 시장 좌판 (풍화된 천막과 보급 상자·술통·양동이)
   {
     const g = sg(W, -2.6, 7.8, 0.15);
     part(box(2.4, 0.1, 1.0), K.wood, g, 0, 0.85, 0);
     [[-1.1, -0.45], [1.1, -0.45], [-1.1, 0.45], [1.1, 0.45]].forEach(([x, z]) => part(box(0.08, 2.0, 0.08), K.wood, g, x, 1.0, z));
-    const stripe = canvasTex(256, 64, (c, w, h) => { for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#a89c84' : '#6a2c22'; c.fillRect(i * 32, 0, 32, h); } });
-    const aw = part(box(2.6, 0.05, 1.3), new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.9 }), g, 0, 2.05, 0.1);
+    const stripe = canvasTex(256, 64, (c, w, h) => {
+      for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#786c58' : '#4e221b'; c.fillRect(i * 32, 0, 32, h); }
+      c.fillStyle = 'rgba(20,14,10,0.32)'; c.fillRect(0, 0, w, 10); c.fillRect(0, h - 12, w, 12);
+    });
+    const aw = part(box(2.6, 0.05, 1.3), new THREE.MeshStandardMaterial({ map: stripe, roughness: 0.92 }), g, 0, 2.05, 0.1);
     aw.rotation.x = 0.18;
-    const fr = [0x7a2a20, 0x9a6a2a, 0x5a6a32, 0x9a8a44];
-    for (let i = 0; i < 14; i++) part(sphere(0.09, 10, 8), stdM(fr[i % 4], 0.6), g, -0.9 + (i % 7) * 0.3, 0.98, -0.2 + Math.floor(i / 7) * 0.3);
+    // 좌판 위 나무 상자와 자루, 둘레의 통·양동이·등불
+    [[-0.75, 0.36, 0.22, 0.32, 0.08], [-0.15, 0.42, 0.2, 0.34, -0.12], [0.55, 0.38, 0.24, 0.3, 0.15]].forEach(([x, w, h, d, r]) => {
+      const bx = part(box(w, h, d), K.wood, g, x, 0.9 + h / 2, 0);
+      bx.rotation.y = r;
+    });
+    prop(W, 'ph:wooden_bucket_01', -3.45, 7.35, { h: 0.48, rot: 0.5, shadow: false });
+    prop(W, 'ph:wooden_lantern_01', -3.65, 8.05, { h: 0.45, rot: 0.2, shadow: false });
     addObs(W, -2.6, 7.8, 1.3);
   }
   crate(W, K, 10.6, -3.8, 0.7, 0.3); crate(W, K, 11.1, -3.0, 0.55, -0.2); barrel(W, K, 7.4, -5.6); barrel(W, K, -9.6, -1.4); barrel(W, K, -10.1, -0.6, 0.9);
@@ -10935,26 +11048,25 @@ function buildTown() {
   [[-18, -5], [18.5, 3.5], [-18.5, 7], [19, -4]].forEach(([x, y]) => pine(W, K, x, y, 1.2));
   const inPlaza = (x, y) => Math.hypot(x, y - 1) < 9.8 || (Math.abs(x - 1.5) < 2.4 && y > 8) || Math.abs(y - 0.5) < 1.8 && x < -9 || Math.abs(y + 3.5) < 1.8 && x > 9 || (Math.abs(x) < 1.8 && y < -8);
   tufts(W, 520, [-20, 20, -16, 13], [0x4a5632, 0x56603a, 0x3e4a2a, 0x6a6a44], inPlaza);
-  // 꽃밭과 사냥터 이정표
+  // 이끼 낀 바위 무리와 사냥터 이정표 (원색 꽃밭 대신 디아블로풍 야영지 바위와 수풀)
   {
-    // 마른 들꽃 빛 (채도 높은 꽃밭은 이 화풍에 튄다)
-    const fc = [0x8a4a3e, 0x9a8a5a, 0xa8a090, 0x6a5a6a, 0x8a6a40];
-    const fg = geo('flower', () => new THREE.IcosahedronGeometry(0.09, 0));
-    const fm = new THREE.InstancedMesh(fg, stdM(0xffffff, 0.7), 140), d = new THREE.Object3D(), col = new THREE.Color();
-    let n = 0;
-    [[-6.6, -7.8, 1.5], [6.6, -7.8, 1.5], [-10.0, 4.8, 1.1], [11.0, 2.6, 1.0], [-4.8, 10.6, 1.1]].forEach(([x, y, r]) => {
-      for (let i = 0; i < 28 && n < 140; i++, n++) {
-        const a = rand(0, TAU), rr = Math.sqrt(Math.random()) * (r - 0.15);
-        setW(d, x + Math.cos(a) * rr, y + Math.sin(a) * rr, rand(0.12, 0.3)); d.scale.setScalar(rand(0.7, 1.3)); d.rotation.set(rand(0, 3), rand(0, 3), 0); d.updateMatrix();
-        fm.setMatrixAt(n, d.matrix); fm.setColorAt(n, col.set(fc[Math.floor(rand(0, fc.length))]));
+    [[-6.6, -7.8, 'rock01', 1.15], [6.6, -7.8, 'rock02', 1.1], [-10.0, 4.8, 'rock03', 0.95], [11.0, 2.6, 'rock01', 0.9], [-4.8, 10.6, 'rock02', 0.95]].forEach(([x, y, nd, s], i) => {
+      if (!prop(W, 'ph:rock_moss_set_01', x, y, { node: nd, s, rot: i * 1.3, shadow: false })) {
+        const g = sg(W, x, y, i * 1.1);
+        part(rockGeo(0.55 * s, i), K.stoneDark, g, 0, 0.18, 0).scale.set(1.2, 0.65, 1.0);
       }
+      if (i % 2 === 0) prop(W, 'ph:rock_07', x + 0.75, y - 0.35, { s: 0.65, rot: i * 2.1, shadow: false });
     });
-    fm.count = n; W.group.add(fm);
     const sign = sg(W, 4.7, 7.8, -0.3);
     part(cyl(0.07, 0.09, 2.4, 8), K.wood, sign, 0, 1.2, 0);
-    [['순환의 탑', '#9189dc', 2.05, 0.3], ['화염의 협곡', '#e47b40', 1.65, -0.25], ['증기의 지하도시', '#5cb5a7', 1.25, 0.35], ['법전의 성채', '#cfae62', 0.85, -0.2]].forEach(([t, c, y, r]) => {
-      const tex = canvasTex(256, 64, (g, w, h) => { g.fillStyle = '#6a4a2a'; g.fillRect(0, 0, w, h); g.fillStyle = c; g.fillRect(0, 0, 10, h); g.fillStyle = '#f3e6c8'; g.font = 'bold 30px sans-serif'; g.textBaseline = 'middle'; g.fillText(t, 22, h / 2 + 2); });
-      const b = part(box(0.95, 0.24, 0.05), [K.wood, K.wood, K.wood, K.wood, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 }), K.wood], sign, 0.3, y, 0);
+    [['순환의 탑', '#7870b8', 2.05, 0.3], ['화염의 협곡', '#b85c2c', 1.65, -0.25], ['증기의 지하도시', '#4a8e82', 1.25, 0.35], ['법전의 성채', '#a88a48', 0.85, -0.2]].forEach(([t, c, y, r]) => {
+      const tex = canvasTex(256, 64, (g, w, h) => {
+        g.fillStyle = '#3d2b1c'; g.fillRect(0, 0, w, h);
+        g.strokeStyle = '#1e140c'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
+        g.fillStyle = c; g.fillRect(4, 4, 8, h - 8);
+        g.fillStyle = '#d4c39e'; g.font = 'bold 28px serif'; g.textBaseline = 'middle'; g.fillText(t, 22, h / 2 + 2);
+      });
+      const b = part(box(0.95, 0.24, 0.05), [K.wood, K.wood, K.wood, K.wood, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.88 }), K.wood], sign, 0.3, y, 0);
       b.rotation.y = r;
     });
     addObs(W, 4.7, 7.8, 0.3);
@@ -10963,20 +11075,26 @@ function buildTown() {
   return W;
 }
 
-// 순환의 탑: 열역학 사이클
+// 순환의 탑: 열역학 사이클 (고딕 천문·연금술 궤도 문양, 교과서 글자 제거)
 function cycleFloorTex() {
-  return canvasTex(512, 512, (g, S) => {
-    g.strokeStyle = '#f2ece2'; g.fillStyle = '#f2ece2'; g.lineWidth = 6; g.shadowColor = '#c8b490'; g.shadowBlur = 14; g.lineCap = 'round';
-    g.beginPath(); g.arc(256, 256, 236, 0, TAU); g.stroke();
-    g.lineWidth = 3; g.beginPath(); g.arc(256, 256, 214, 0, TAU); g.stroke();
+  return canvasTex(512, 512, (g) => {
+    const c = 256;
+    g.strokeStyle = '#d8ceb8'; g.fillStyle = '#d8ceb8'; g.lineCap = 'round';
+    g.lineWidth = 6; g.beginPath(); g.arc(c, c, 232, 0, TAU); g.stroke();
+    g.lineWidth = 3; g.beginPath(); g.arc(c, c, 206, 0, TAU); g.stroke();
+    g.beginPath(); g.arc(c, c, 148, 0, TAU); g.stroke();
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * TAU, r0 = i % 6 === 0 ? 182 : 206, r1 = 232;
+      g.lineWidth = i % 6 === 0 ? 5 : 2.5;
+      g.beginPath(); g.moveTo(c + Math.cos(a) * r0, c + Math.sin(a) * r0); g.lineTo(c + Math.cos(a) * r1, c + Math.sin(a) * r1); g.stroke();
+    }
     g.lineWidth = 4;
-    g.beginPath(); g.moveTo(110, 400); g.lineTo(110, 110); g.moveTo(110, 400); g.lineTo(410, 400); g.stroke();
-    g.font = 'bold 34px serif'; g.fillText('P', 82, 112); g.fillText('V', 410, 438);
-    g.lineWidth = 7;
-    const A = [150, 160], B = [250, 210], Cc = [370, 330], D = [210, 290];
-    g.beginPath(); g.moveTo(...A); g.quadraticCurveTo(190, 196, ...B); g.quadraticCurveTo(320, 250, ...Cc); g.quadraticCurveTo(280, 320, ...D); g.quadraticCurveTo(170, 230, ...A); g.stroke();
-    [A, B, Cc, D].forEach(([x, y], i) => { g.beginPath(); g.arc(x, y, 9, 0, TAU); g.fill(); g.fillText(String(i + 1), x + 10, y - 10); });
-    g.font = '26px serif'; g.fillText('Q₁', 200, 168); g.fillText('Q₂', 280, 352);
+    const A = [156, 156], B = [266, 198], Cc = [366, 326], D = [202, 298];
+    g.beginPath(); g.moveTo(...A); g.quadraticCurveTo(204, 188, ...B); g.quadraticCurveTo(324, 246, ...Cc); g.quadraticCurveTo(278, 322, ...D); g.quadraticCurveTo(170, 228, ...A); g.stroke();
+    [A, B, Cc, D].forEach(([x, y]) => {
+      g.beginPath(); g.arc(x, y, 10, 0, TAU); g.stroke();
+      g.beginPath(); g.arc(x, y, 4, 0, TAU); g.fill();
+    });
   });
 }
 // 색 (WS5.4): 보라 몬스터가 서는 곳이라 바닥과 기둥은 청회색 돌, 띠와 고리는 놋쇠, 빛은 차가운 결정에서만 온다
@@ -11170,21 +11288,35 @@ function buildS2() {
   const pool = emit(W, lavaMaterial(), 'src');
   pool.emissiveMap.repeat.set(1, 1);
   lavaUpgrade(pool, 1.2, 1.2);
-  [[-8.5, 4.5, 1.9], [9.8, -4.8, 1.6]].forEach(([x, y, r]) => {
+  const rock = stdM(0x302a28, 0.95, 0, { flatShading: true }), rock2 = stdM(0x463c37, 0.95, 0, { flatShading: true });
+  basaltUpgrade(rock, 2, 0xb4a8a0); basaltUpgrade(rock2, 2, 0xd8c8bc);
+  [[-8.5, 4.5, 1.9], [9.8, -4.8, 1.6]].forEach(([x, y, r], pi) => {
     flat(W, new THREE.CircleGeometry(r, 32), pool, x, y, 0.02);
-    flat(W, new THREE.RingGeometry(r, r + 0.4, 32), stdM(0x1a0e0a, 0.9, 0, { polygonOffset: true, polygonOffsetFactor: -3 }), x, y, 0.025);
+    flat(W, new THREE.RingGeometry(r * 0.92, r + 0.42, 32), stdM(0x1a0e0a, 0.9, 0, { polygonOffset: true, polygonOffsetFactor: -3 }), x, y, 0.025);
+    const rg = sg(W, x, y);
+    for (let j = 0; j < 14; j++) {
+      const a = (j / 14) * TAU + (pi * 0.4), rr = r + 0.06 + (j % 3) * 0.1;
+      const rk = part(rockGeo(1, (j + pi * 3) % 7), j % 2 ? rock : rock2, rg, Math.cos(a) * rr, 0.12, Math.sin(a) * rr);
+      rk.scale.set(0.46 + (j % 3) * 0.12, 0.22 + (j % 2) * 0.1, 0.38 + (j % 3) * 0.1);
+      rk.rotation.set(0.15, -a + 0.4, 0.1);
+    }
     pLight(W, w2(x, y, 1.2), 0xff5a1a, 10, 9, { flicker: true });
     addObs(W, x, y, r + 0.3);
     const p = w2(x, y, 0.1);
-    W.updaters.push((dt) => { if (Math.random() < dt * 4 * fxScale()) { const a = rand(0, TAU), rr = rand(0, r); FX.emit(p.x + Math.cos(a) * rr, 0.15, p.z + Math.sin(a) * rr, { vy: rand(1.5, 3), vx: rand(-0.4, 0.4), vz: rand(-0.4, 0.4), c: C(0xffc070, 4), c1: C(0xff3010, 2), life: rand(0.6, 1.2), s: 0.1, s1: 0.02, g: 3 }); } });
+    W.updaters.push((dt) => { if (Math.random() < dt * 4 * fxScale()) { const a = rand(0, TAU), rr = rand(0, r); FX.emit(p.x + Math.cos(a) * rr, 0.15, p.z + rand(-0.4, 0.4) + Math.sin(a) * rr, { vy: rand(1.5, 3), vx: rand(-0.4, 0.4), vz: rand(-0.4, 0.4), c: C(0xffc070, 4), c1: C(0xff3010, 2), life: rand(0.6, 1.2), s: 0.1, s1: 0.02, g: 3 }); } });
     W.updaters.push((dt, t) => { pool.emissiveMap.offset.set(Math.sin(t * 0.1) * 0.2, t * 0.01); });
   });
   pLight(W, w2(-4, 11.5, 1.5), 0xff5a1a, 12, 12, { flicker: true });
   // 주기적으로 터지는 불기둥 (연소 반응)
   [[-6.8, 1.8], [7.2, 3.4], [0.6, -6.2]].forEach(([x, y], i) => {
     const vent = flat(W, new THREE.CircleGeometry(0.55, 20), emit(W, emiM(0xff5a10, 2.2, 0x200400), 'src'), x, y, 0.03);
-    // 구멍 둘레의 식은 돌 테와 받은 용암 질감 (쉬는 동안은 굳은 겉껍질, 터질 때 밝다)
-    flat(W, new THREE.RingGeometry(0.55, 0.85, 20), stdM(0x1a0e0a, 0.9, 0, { polygonOffset: true, polygonOffsetFactor: -3 }), x, y, 0.035);
+    // 구멍 둘레의 식은 현무암 테와 돌조각
+    flat(W, new THREE.RingGeometry(0.5, 0.85, 20), stdM(0x1a0e0a, 0.9, 0, { polygonOffset: true, polygonOffsetFactor: -3 }), x, y, 0.035);
+    const vg = sg(W, x, y);
+    for (let j = 0; j < 8; j++) {
+      const a = (j / 8) * TAU + i * 0.5, rk = part(rockGeo(1, (j + i) % 7), j % 2 ? rock : rock2, vg, Math.cos(a) * 0.68, 0.08, Math.sin(a) * 0.68);
+      rk.scale.set(0.26, 0.16, 0.22); rk.rotation.y = -a;
+    }
     lavaUpgrade(vent.material, 0.45, 0.45);
     const p = w2(x, y, 0.1), per = 4.5 + i * 1.3;
     let fired = -1;
@@ -11200,8 +11332,6 @@ function buildS2() {
     addObs(W, x, y, 0.7);
   });
   pLight(W, w2(7, 11.5, 1.5), 0xff5a1a, 12, 12, { flicker: true });
-  const rock = stdM(0x302a28, 0.95, 0, { flatShading: true }), rock2 = stdM(0x463c37, 0.95, 0, { flatShading: true });
-  basaltUpgrade(rock, 2, 0xb4a8a0); basaltUpgrade(rock2, 2, 0xd8c8bc);
   // 싸움터 가장자리의 큰 바위 (받은 모델)
   boulders(W, [[-12.6, -6.4, 2.2, 0.4], [12.9, -6.8, 1.9, 2.1], [-12.2, 7.6, 2.5, 4.0], [13.1, 8.2, 2.0, 1.2], [-1.8, 9.6, 1.6, 2.8], [5.8, -9.2, 1.4, 5.1]], 0x8a7c74);
   for (let i = 0; i < 16; i++) {
@@ -11243,17 +11373,21 @@ function buildS2() {
   return W;
 }
 
-// 증기의 지하도시: 운영관리
+// 증기의 지하도시: 운영관리 (교과서 단위 글자 제거, 그을린 황동 계기판)
 function gaugeTex() {
   return canvasTex(256, 256, (g, S) => {
     const c = S / 2;
-    g.fillStyle = '#efe9d8'; g.beginPath(); g.arc(c, c, 120, 0, TAU); g.fill();
-    g.strokeStyle = '#2a2a2a'; g.lineWidth = 8; g.stroke();
-    g.lineWidth = 3;
-    for (let i = 0; i <= 10; i++) { const a = Math.PI * 0.75 + (i / 10) * Math.PI * 1.5; g.beginPath(); g.moveTo(c + Math.cos(a) * 100, c + Math.sin(a) * 100); g.lineTo(c + Math.cos(a) * (i % 5 ? 88 : 78), c + Math.sin(a) * (i % 5 ? 88 : 78)); g.stroke(); }
-    g.strokeStyle = '#b3241c'; g.lineWidth = 7; g.beginPath(); g.arc(c, c, 94, Math.PI * 1.95, Math.PI * 2.25); g.stroke();
-    g.fillStyle = '#222'; g.font = 'bold 22px sans-serif'; g.textAlign = 'center'; g.fillText('MPa', c, c + 52);
-    g.font = '18px sans-serif'; g.fillText('0', c - 62, c + 76); g.fillText('1.0', c + 62, c + 76);
+    g.fillStyle = '#b8a888'; g.beginPath(); g.arc(c, c, 120, 0, TAU); g.fill();
+    g.strokeStyle = '#241e18'; g.lineWidth = 10; g.stroke();
+    g.strokeStyle = '#6a583c'; g.lineWidth = 2; g.beginPath(); g.arc(c, c, 74, 0, TAU); g.stroke();
+    g.strokeStyle = '#241e18';
+    for (let i = 0; i <= 20; i++) {
+      const a = Math.PI * 0.75 + (i / 20) * Math.PI * 1.5;
+      g.lineWidth = i % 5 === 0 ? 4.5 : 2;
+      g.beginPath(); g.moveTo(c + Math.cos(a) * 104, c + Math.sin(a) * 104); g.lineTo(c + Math.cos(a) * (i % 5 === 0 ? 80 : 92), c + Math.sin(a) * (i % 5 === 0 ? 80 : 92)); g.stroke();
+    }
+    g.strokeStyle = '#8f1d14'; g.lineWidth = 8; g.beginPath(); g.arc(c, c, 94, Math.PI * 1.92, Math.PI * 2.25); g.stroke();
+    g.fillStyle = '#3a2c1c'; g.beginPath(); g.arc(c, c, 14, 0, TAU); g.fill();
   });
 }
 // 색 (WS5.4): 청록 몬스터가 서는 곳이라 쇠와 관은 따뜻한 회갈색, 등은 호박빛 가스등이다. 흰 김과 구리가 장소의 색이다
@@ -11404,15 +11538,17 @@ function buildS3() {
   return W;
 }
 
-// 법전의 성채: 안전·법규
-function steleTex(title) {
+// 법전의 성채: 안전·법규 (풍화된 고딕 석비와 고서적, 조문 한글 제거)
+function steleTex() {
   return canvasTex(256, 384, (g, Wd, H) => {
-    g.fillStyle = '#c8b48a'; g.fillRect(0, 0, Wd, H);
-    for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? '255,250,230' : '80,60,30'},${Math.random() * 0.08})`; g.fillRect(Math.random() * Wd, Math.random() * H, 2, 2); }
-    g.fillStyle = '#5a4424'; g.font = 'bold 34px serif'; g.textAlign = 'center';
-    g.fillText(title, Wd / 2, 64);
-    g.fillRect(40, 84, Wd - 80, 3);
-    for (let i = 0; i < 9; i++) { const w = (0.55 + Math.random() * 0.35) * (Wd - 70); g.fillRect(35, 118 + i * 26, w, 6); }
+    g.fillStyle = '#968870'; g.fillRect(0, 0, Wd, H);
+    for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? '210,198,175' : '50,40,26'},${Math.random() * 0.08})`; g.fillRect(Math.random() * Wd, Math.random() * H, 2, 2); }
+    g.strokeStyle = '#483a26'; g.lineWidth = 5; g.strokeRect(18, 18, Wd - 36, H - 36);
+    g.fillStyle = '#483a26';
+    g.beginPath(); g.arc(Wd / 2, 58, 22, 0, TAU); g.stroke();
+    g.beginPath(); g.moveTo(Wd / 2, 34); g.lineTo(Wd / 2, 82); g.moveTo(Wd / 2 - 22, 58); g.lineTo(Wd / 2 + 22, 58); g.stroke();
+    g.fillRect(36, 94, Wd - 72, 4);
+    for (let i = 0; i < 9; i++) { const w = (0.55 + ((i * 29) % 10) * 0.035) * (Wd - 76); g.fillRect(38, 118 + i * 26, w, 6); }
   });
 }
 // 색 (WS5.4): 금빛 몬스터가 서는 곳이라 바닥과 성벽은 회색 석회암, 대리석은 흰빛이다. 금빛은 몬스터와 화로에만
@@ -11477,17 +11613,21 @@ function buildS4() {
   brazier(W, K, -1.8, 6.9, 1.1); brazier(W, K, 3.2, 6.9, 1.1); brazier(W, K, -10.5, 1.5, 1); brazier(W, K, 11.5, 2, 1);
   pLight(W, w2(0.7, 7, 2.4), 0xffa040, 9, 11, { flicker: true });
   [[-12, 5.5], [12.5, 6]].forEach(([x, y]) => { const g = sg(W, x, y); part(cyl(1.0, 1.1, 0.7, 16), sandM, g, 0, 0.35, 0); tree(W, K, x, y, 0.8, true); });
-  // 펼쳐진 거대 법전: 쪽이 천천히 넘어간다
+  // 펼쳐진 거대 고서적: 쪽이 천천히 넘어간다 (한글 법령 제목 제거, 고딕 필사본 양피지)
   {
     const g = sg(W, 0.6, 6.2);
     part(box(1.6, 0.9, 1.0), sandM, g, 0, 0.45, 0);
     const pageTex = canvasTex(256, 320, (c, w, h) => {
-      c.fillStyle = '#c4b89c'; c.fillRect(0, 0, w, h);
-      c.fillStyle = '#6a4a24'; c.font = 'bold 30px serif'; c.textAlign = 'center'; c.fillText('에너지이용', w / 2, 46); c.fillText('합리화법', w / 2, 82);
-      for (let i = 0; i < 9; i++) c.fillRect(30, 112 + i * 20, (0.5 + Math.random() * 0.4) * (w - 60), 5);
+      c.fillStyle = '#9c8d72'; c.fillRect(0, 0, w, h);
+      c.strokeStyle = '#5c4628'; c.lineWidth = 5; c.strokeRect(14, 14, w - 28, h - 28);
+      c.fillStyle = '#6e2018'; c.fillRect(28, 28, 44, 44);
+      c.fillStyle = '#c4a258'; c.fillRect(34, 34, 32, 32);
+      c.fillStyle = '#443420';
+      for (let i = 0; i < 3; i++) c.fillRect(82, 32 + i * 14, w - 110, 5);
+      for (let i = 0; i < 9; i++) c.fillRect(28, 92 + i * 22, (0.55 + ((i * 31) % 10) * 0.038) * (w - 56), 5);
     });
-    const pm = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.9, side: THREE.DoubleSide });
-    const cover = stdM(0x6a1a14, 0.7);
+    const pm = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.92, side: THREE.DoubleSide });
+    const cover = stdM(0x3e1612, 0.78);
     const book = grp(g, 0, 1.0, 0);
     book.rotation.x = -0.35;
     part(box(1.9, 0.08, 1.3), cover, book, 0, -0.04, 0);
@@ -11504,9 +11644,9 @@ function buildS4() {
   // 바닥에 흩어진 법전 낱장 (두 장은 바람에 이따금 들썩인다)
   {
     const pageTex = canvasTex(128, 160, (g, w, h) => {
-      g.fillStyle = '#b8ad94'; g.fillRect(0, 0, w, h);
-      g.fillStyle = 'rgba(150,40,30,.75)'; g.fillRect(14, 10, 44, 6);
-      g.fillStyle = 'rgba(90,70,40,.5)';
+      g.fillStyle = '#8c7e66'; g.fillRect(0, 0, w, h);
+      g.fillStyle = 'rgba(115,30,22,.72)'; g.fillRect(14, 10, 44, 6);
+      g.fillStyle = 'rgba(65,50,30,.55)';
       for (let yy = 26; yy < h - 14; yy += 11) g.fillRect(14, yy, w - 28 - ((yy * 7) % 23), 3);
     });
     const pm = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.9, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
@@ -11606,18 +11746,25 @@ function buildRift() {
 // ---------- NPC와 마을 주민 ----------
 function buildBoard() {
   const R = { kind: 'board', root: new THREE.Group(), mats: {}, akey: 'board' };
-  const wood = texMatR('wood', 256, [1, 1], { roughness: 0.8 }), dk = stdM(0x3a2414, 0.85);
-  [-0.95, 0.95].forEach((x) => part(box(0.14, 2.35, 0.14), wood, R.root, x, 1.17, 0));
-  part(box(2.1, 1.3, 0.1), wood, R.root, 0, 1.5, 0);
-  part(box(2.4, 0.08, 0.55), dk, R.root, 0, 2.3, 0.04).rotation.x = 0.28;
-  const paper = canvasTex(128, 160, (g, w, h) => {
-    g.fillStyle = '#efe6cf'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#3a2a1a';
-    for (let i = 0; i < 7; i++) g.fillRect(12, 24 + i * 16, (0.5 + Math.random() * 0.45) * (w - 24), 4);
-    g.fillStyle = '#a82a22'; g.beginPath(); g.arc(w - 26, h - 26, 12, 0, TAU); g.fill();
+  const wood = texMatR('wood', 256, [1, 2], { roughness: 0.84, color: new THREE.Color(0x9e7b56) }), dk = stdM(0x5c4228, 0.86), iron = stdM(0x3a3e44, 0.5, 0.8);
+  [-0.95, 0.95].forEach((x) => {
+    part(box(0.16, 2.38, 0.16), wood, R.root, x, 1.19, 0);
+    part(box(0.24, 0.28, 0.24), iron, R.root, x, 0.14, 0);
+    part(box(0.18, 0.12, 0.18), iron, R.root, x, 1.92, 0);
   });
-  const pm = new THREE.MeshStandardMaterial({ map: paper, roughness: 0.9 });
-  [[-0.6, 1.62, 0.1], [0.05, 1.5, -0.06], [0.62, 1.66, 0.08], [-0.25, 1.28, -0.12], [0.45, 1.25, 0.05]].forEach(([x, y, r]) => {
+  part(box(2.14, 1.32, 0.1), wood, R.root, 0, 1.5, 0);
+  part(box(2.22, 0.09, 0.14), dk, R.root, 0, 2.16, 0);
+  part(box(2.22, 0.09, 0.14), dk, R.root, 0, 0.84, 0);
+  part(box(2.44, 0.09, 0.58), dk, R.root, 0, 2.32, 0.04).rotation.x = 0.28;
+  const paper = canvasTex(128, 160, (g, w, h) => {
+    g.fillStyle = '#baa682'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#6e5838'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+    g.fillStyle = '#2d2014';
+    for (let i = 0; i < 7; i++) g.fillRect(14, 26 + i * 16, (0.5 + ((i * 37) % 10) * 0.04) * (w - 28), 4);
+    g.fillStyle = '#7c1c16'; g.beginPath(); g.arc(w - 26, h - 26, 11, 0, TAU); g.fill();
+  });
+  const pm = new THREE.MeshStandardMaterial({ map: paper, roughness: 0.92 });
+  [[-0.6, 1.62, 0.08], [0.05, 1.5, -0.05], [0.62, 1.66, 0.06], [-0.25, 1.28, -0.09], [0.45, 1.25, 0.04]].forEach(([x, y, r]) => {
     const p = part(geo('paper', () => new THREE.PlaneGeometry(0.42, 0.52)), pm, R.root, x, y, 0.058);
     p.rotation.z = r;
   });
@@ -11697,8 +11844,8 @@ function spawnCritters() {
       wl.rotation.z = f; wr.rotation.z = -f;
     });
   }
-  const flyM = [0xf2e070, 0xffffff, 0xf0a0c0].map((c) => stdM(c, 0.6, 0, { side: THREE.DoubleSide, emissive: new THREE.Color(c).multiplyScalar(0.15) }));
-  const fwG = geo('flyWing', () => { const g = new THREE.CircleGeometry(0.07, 8); g.translate(0.07, 0, 0); g.rotateX(-Math.PI / 2); return g; });
+  const flyM = [0xd89448, 0xc26c2c, 0xe0b468].map((c) => stdM(c, 0.6, 0, { side: THREE.DoubleSide, emissive: new THREE.Color(c).multiplyScalar(0.28) }));
+  const fwG = geo('flyWing', () => { const g = new THREE.CircleGeometry(0.032, 6); g.translate(0.032, 0, 0); g.rotateX(-Math.PI / 2); return g; });
   for (let i = 0; i < 7; i++) {
     const f = new THREE.Group(), m = flyM[i % 3];
     const l = part(fwG, m, f), rr = part(fwG, m, f);
@@ -11768,7 +11915,10 @@ function updateNPC(e, dt) {
     e.timer -= dt;
     if (e.timer <= 0) {
       e.timer = rand(5, 8);
-      e.ch.play('cast', 1.3, [[0.45, () => { if (e.ch.rig.orb) burst(e.ch.rig.orb.getWorldPosition(new THREE.Vector3()), 18, { c: C(0x58d8ff, 3), v0: 0.5, v1: 2, s: 0.12, g: -1 }); }]]);
+      e.ch.play('cast', 1.3, [[0.45, () => {
+        const op = e.ch.rig.orb ? e.ch.rig.orb.getWorldPosition(new THREE.Vector3()) : e.ch.root.position.clone().add(new THREE.Vector3(0, 1.35, 0));
+        burst(op, 18, { c: C(0x58d8ff, 3), v0: 0.5, v1: 2, s: 0.12, g: -1 });
+      }]]);
     }
   }
 }
@@ -11810,7 +11960,7 @@ function dieStart(e, how, q) {
     e.rx = null;
     // 빠르게 다음 문제로 넘겨 반격 자세가 남아 있어도 곧바로 걷는다.
     // play가 남은 타격 콜백을 마친 뒤 자세를 바꾸므로 전투 판정은 버리지 않는다.
-    if (e.model === 'golem' && e.ch.rig.spr) e.ch.play('run', 0.9);
+    if (e.ch.rig.spr) e.ch.play('run', 0.9);
     if (player) { const dx = e.sx - player.sx, dy = e.sy - player.sy, d = Math.hypot(dx, dy) || 1; e.fleeDir = [dx / d, dy / d]; } else e.fleeDir = [1, 0];
     faceToward(e, e.fleeDir[0], e.fleeDir[1]);
   }
@@ -11853,7 +12003,7 @@ function updateDying(e, dt) {
     const u = Math.min(1, e.dieT / 0.9);
     // 무거운 골렘이 같은 보폭으로 초당 여덟 칸을 미끄러져 나가지 않게 한다.
     // 퇴장 시간·규칙은 그대로 두고 화면에서 달아나는 거리만 줄인다.
-    const travel = dt * (e.model === 'golem' && e.ch.rig.spr ? 2.4 : 8);
+    const travel = dt * (e.ch.rig.spr ? (e.model === 'golem' ? 2.4 : e.model === 'guard' ? 3.2 : 4.2) : 8);
     e.sx += e.fleeDir[0] * travel; e.sy += e.fleeDir[1] * travel;
     e.ch.travel = travel * Math.hypot(e.fleeDir[0], e.fleeDir[1]);
     e.ch.speed = 1;
@@ -12186,10 +12336,21 @@ function playerAura(dt) {
   if (!player || !player.rig) return;
   if (lookT > 0) { lookT -= dt; if (lookT <= 0) { applyGear(player.rig, YV.api.gear()); player.ch.refreshBase(); } }
   const w = player.rig.weapon && player.rig.weapon.userData;
-  if (w && w.level >= 7 && Math.random() < dt * (w.level >= 9 ? 26 : 12) * fxScale()) {
-    const t = player.rig.weapon.localToWorld(new THREE.Vector3(0, rand(0.25, 0.95), 0));
-    const hot = w.level >= 9;
-    FX.emit(t.x, t.y, t.z, { vy: rand(0.3, 0.9), vx: rand(-0.1, 0.1), vz: rand(-0.1, 0.1), c: C(hot ? 0xffb050 : 0x8ac8ff, 3), c1: C(hot ? 0xff3010 : 0x3a6aff, 1), life: rand(0.4, 0.8), s: 0.1, s1: 0, g: -0.2 });
+  const swLv = w ? w.level : (player.rig.spr && player.rig.gearLv ? player.rig.gearLv.sw : 0);
+  if (swLv >= 7 && Math.random() < dt * (swLv >= 9 ? 26 : 12) * fxScale()) {
+    let t = null;
+    if (w) t = player.rig.weapon.localToWorld(new THREE.Vector3(0, rand(0.25, 0.95), 0));
+    else if (player.rig.spr && player.rig.plane) {
+      const tip = new THREE.Vector3(), piv = new THREE.Vector3();
+      const ch = player.ch, M = (ch.act && ACTMETA[ch.act] && ACTMETA[ch.act].trail && ACTMETA[ch.act]) || ACTMETA.cleave;
+      const u = ch.act && ACTMETA[ch.act] === M ? ch.actT / ch.actDur : M.contact;
+      spriteBlade(M, player.rig, u, tip, piv);
+      t = piv.lerp(tip, rand(0.2, 0.95));
+    }
+    if (t) {
+      const hot = swLv >= 9;
+      FX.emit(t.x, t.y, t.z, { vy: rand(0.3, 0.9), vx: rand(-0.1, 0.1), vz: rand(-0.1, 0.1), c: C(hot ? 0xffb050 : 0x8ac8ff, 3), c1: C(hot ? 0xff3010 : 0x3a6aff, 1), life: rand(0.4, 0.8), s: 0.1, s1: 0, g: -0.2 });
+    }
   }
   dustT -= dt;
   if (player.ch.speed > 0.6 && dustT <= 0 && world) {
@@ -12547,8 +12708,43 @@ if (DEV) {
   };
 }
 
-// 초상 (WS5 담당): 글자 화면에 쓸 기사·NPC 초상. 아직 비어 있고 YV.portrait는 view-post의 자리값(null)이다
+// 초상 (WS5 담당): 글자 화면에 쓸 기사·NPC 초상. D2R 기사 스프라이트(첫 칸 투구·어깨갑옷)를 잘라 어두운 고딕 초상화로 그린다
 // 모델 빌더와 카메라 뒤, view-main 앞에 붙는다
+function buildKnightPortrait(img) {
+  if (!img || !img.width || !img.height || typeof document === 'undefined') return null;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  if (!g) return null;
+  const bg = g.createRadialGradient(64, 52, 10, 64, 64, 68);
+  bg.addColorStop(0, '#38281c');
+  bg.addColorStop(0.55, '#1a140f');
+  bg.addColorStop(1, '#080605');
+  g.fillStyle = bg;
+  g.fillRect(0, 0, 128, 128);
+  const cols = Math.max(1, Math.round(img.width / 320)), rows = Math.max(1, Math.round(img.height / 400));
+  const cw = img.width / cols, ch = img.height / rows;
+  g.drawImage(img, cw * 0.23, ch * 0.13, cw * 0.44, ch * 0.35, 2, 4, 124, 124);
+  const vig = g.createRadialGradient(64, 60, 38, 64, 64, 64);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(0.75, 'rgba(8,6,4,0.28)');
+  vig.addColorStop(1, 'rgba(4,3,2,0.78)');
+  g.fillStyle = vig;
+  g.fillRect(0, 0, 128, 128);
+  const url = c.toDataURL('image/png');
+  YV.portrait = url;
+  document.documentElement.style.setProperty('--portrait-url', `url("${url}")`);
+  return url;
+}
+SKIN_LOAD.then(() => {
+  const tx = SPR.tex.knight;
+  if (tx && tx.image) { buildKnightPortrait(tx.image); return; }
+  if (typeof Image === 'undefined') return;
+  const im = new Image();
+  im.crossOrigin = 'anonymous';
+  im.onload = () => buildKnightPortrait(im);
+  im.src = `${ASSET_BASE}spr/knight.webp`;
+});
 
 // ---------- 필드 개체와 연출 ----------
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
